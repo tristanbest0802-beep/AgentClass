@@ -1,6 +1,6 @@
 {
   "name": "agentclass",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Vois en direct ce que font tes agents IA, sans consommer un seul token.",
   "type": "module",
   "license": "MIT",

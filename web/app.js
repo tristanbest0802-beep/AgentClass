@@ -185,18 +185,41 @@ function roomHTML(v, now) {
 }
 
 // Plan 2D de la galerie
+// Dessiné en SVG (320 × 240) : se met exactement à l'échelle de la carte, quelle que soit sa largeur.
 function planHTML(v) {
-  const seats = v.desks.map((d) => (d
-    ? `<span class="seat ${d.awake ? 'awake' : ''}">${sprite({ ...look(d.key), awake: d.awake, src: v.source })}<span class="desk"></span></span>`
-    : '<span class="seat"><span class="desk"></span></span>')).join('');
-  return `<div class="plan" style="--wall:${wallOf(v.project)}"><span class="pb"><i></i></span><span class="pt">${sprite({ hat: 'tuft', hatColor: ai(v.source).dark, awake: v.prof.awake, src: v.source, glasses: true })}<span class="desk" style="width:46px"></span></span><span class="seats">${seats}</span></div>`;
+  /** Sprite placé dans le plan : largeur w, posé par le bas au point (cx, bottom) */
+  const put = (svg, cx, bottom, w) => {
+    const rows = Number(/viewBox="0 0 14 (\d+)"/.exec(svg)?.[1] ?? 13);
+    const h = (w * rows) / 14;
+    return svg.replace('<svg ', `<svg x="${cx - w / 2}" y="${bottom - h}" width="${w}" height="${h}" `);
+  };
+  const W = 320, top = 104, bottom = 226;
+  const n = v.desks.length, rows = Math.max(1, Math.ceil(n / 4));
+  const rowH = Math.min(32, (bottom - top) / rows);
+  const dw = 44, gap = 18;
+  let s = `<rect width="${W}" height="240" fill="var(--floor)"/>
+    <rect width="${W}" height="48" fill="${wallOf(v.project)}"/>
+    <rect x="96" y="10" width="128" height="28" fill="#2B4339" stroke="#A87A4C" stroke-width="4"/>
+    <rect x="132" y="74" width="56" height="9" fill="var(--wood-top)"/><rect x="132" y="83" width="56" height="3" fill="var(--wood-face)"/>
+    ${put(sprite({ hat: 'tuft', hatColor: ai(v.source).dark, awake: v.prof.awake, src: v.source, glasses: true }), 160, 76, 24)}`;
+  for (let r = 0, i = 0; r < rows; r++) {
+    const k = Math.ceil((n - i) / (rows - r));
+    const x0 = (W - (k * dw + (k - 1) * gap)) / 2;
+    const y = top + (bottom - top - rows * rowH) / 2 + (r + 1) * rowH - 6;
+    for (let j = 0; j < k; j++, i++) {
+      const d = v.desks[i], x = x0 + j * (dw + gap);
+      if (d) s += put(sprite({ ...look(d.key), awake: d.awake, src: v.source }), x + dw / 2, y + 2, Math.min(18, rowH * .6));
+      s += `<rect x="${x}" y="${y}" width="${dw}" height="6" fill="var(--wood-top)"${d?.awake ? ' stroke="var(--live)" stroke-width="2"' : ''}/><rect x="${x}" y="${y + 6}" width="${dw}" height="2" fill="var(--wood-face)"/>`;
+    }
+  }
+  return `<svg class="planv" viewBox="0 0 ${W} 240" preserveAspectRatio="xMidYMid meet" aria-hidden="true">${s}<rect x="2" y="2" width="${W - 4}" height="236" fill="none" stroke="var(--trim)" stroke-width="4"/></svg>`;
 }
 
 // ---------- Barre du haut ----------
 const bar = document.getElementById('top');
 const viewEl = document.getElementById('view');
 const live = document.getElementById('live');
-const ui = { open: null, mode: 'iso', view: { rx: 56, rz: 38 }, sig: '', lost: false };
+const ui = { open: null, mode: 'iso', view: { rx: 56, rz: 38 }, sig: '', lost: false, galleryAt: 0, galleryHtml: '' };
 const ISO = { rx: 56, rz: 38 };
 
 function themeHTML() {
@@ -342,7 +365,7 @@ function renderGallery(focusAdd) {
       <div class="thumb-room">${planHTML(v)}</div>
       <div class="card-foot">${foot}</div></button>`;
   }).join('');
-  viewEl.innerHTML = `<section class="gallery">
+  const html = `<section class="gallery">
     <header><h1>${t('yours')}</h1><p>${t('sub', allKeys().length)}</p></header>
     <div class="grid">${cards}
       <div class="card add"><div class="add-inner">
@@ -355,8 +378,13 @@ function renderGallery(focusAdd) {
         </div>
       </div></div>
     </div></section>`;
+  // Rien de changé : on ne touche pas au DOM (le survol et le focus restent en place)
+  if (html === ui.galleryHtml && viewEl.querySelector('.gallery')) return;
+  ui.galleryHtml = html;
+  viewEl.innerHTML = html;
   roomEl = fitEl = null;
   ui.sig = '';
+  ui.galleryAt = Date.now();
   if (focusAdd) document.getElementById('pick-ai')?.focus();
 }
 
@@ -418,10 +446,10 @@ const schedule = () => {
   requestAnimationFrame(() => {
     pending = false;
     if (!ui.open) {
-      // Première donnée : ouvre la classe la plus récente
-      ui.open = allKeys()[0] ?? null;
-      if (ui.open) return render();
-      return renderGallery(false);
+      // Galerie ouverte : on la rafraîchit (au plus une fois par seconde), sans en sortir
+      // ni fermer un menu ouvert.
+      if (Date.now() - ui.galleryAt > 1000 && !document.querySelector('.menu:not([hidden])')) renderGallery(false);
+      return;
     }
     if (!allKeys().includes(ui.open)) { ui.open = allKeys()[0]; return render(); }
     renderClass(false);
@@ -446,7 +474,7 @@ es.onmessage = (m) => {
   if (booted) schedule();
 };
 // Horloge : durées, prof qui s'endort, sous-agents oubliés
-setInterval(() => { if (booted && ui.open) renderClass(false); }, 1000);
+setInterval(() => { if (!booted) return; if (ui.open) renderClass(false); else schedule(); }, 1000);
 
 // ---------- Démarrage ----------
 document.documentElement.dataset.theme = store.get('theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
