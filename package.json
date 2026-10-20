@@ -9,7 +9,13 @@
     "node": ">=20"
   },
   "scripts": {
+    "start": "node bin/agentclass.mjs start",
+    "demo": "node bin/agentclass.mjs demo",
+    "stop": "node bin/agentclass.mjs stop",
     "test": "node --test",
     "bench:hook": "node scripts/bench-hook.mjs"
+  },
+  "bin": {
+    "agentclass": "bin/agentclass.mjs"
   }
 }

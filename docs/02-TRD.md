@@ -45,12 +45,15 @@ Points de contact locaux : la configuration des hooks de Claude Code (manifeste 
 | Route | Rôle |
 |---|---|
 | `GET /?t=<jeton>` | Page de la salle |
+| `GET /web/<fichier>` | Fichiers statiques de la page (sans jeton : rien de secret ; Host et Origin vérifiés) |
 | `GET /events?t=<jeton>` | Flux SSE |
 | `GET /api/agents?t=<jeton>` | Liste des agents connus |
 | `GET /api/graph?t=<jeton>&project=<id>` | Graphe réduit (nœuds, liens) |
 | `POST /shutdown?t=<jeton>` | Arrêt propre |
 
-Chaque requête vérifie `Host` (`127.0.0.1:<port>` ou `localhost:<port>`) et `Origin` (absent ou même origine). Pas d'en-tête CORS. Réponse 403 sinon.
+Chaque requête vérifie `Host` (`127.0.0.1:<port>` ou `localhost:<port>`) et `Origin` (absent ou même origine). Pas d'en-tête CORS. Réponse 403 sinon. En-têtes : CSP stricte (`frame-ancestors 'none'`), `nosniff`, `no-referrer`.
+- Verrou contre le double démarrage : `server.json` créé en exclusif (`wx`) ; un PID mort rend le fichier caduc.
+- `fs.watch` plus balayage d'appoint d'une seconde : sous Windows, le chemin est résolu en nom long avant de surveiller (crash libuv sur un nom court 8.3).
 
 ## Temps réel, hors ligne, performances
 - Événement visible sur la page en moins d'une seconde.
@@ -61,7 +64,7 @@ Chaque requête vérifie `Host` (`127.0.0.1:<port>` ou `localhost:<port>`) et `O
 ## Variables d'environnement
 | Nom | Rôle | Où la trouver |
 |---|---|---|
-| `AGENTCLASS_PORT` | Port du serveur (défaut à fixer, repli automatique si occupé) | facultatif |
+| `AGENTCLASS_PORT` | Port du serveur (défaut 47100, les 9 suivants en repli si occupé ; la démo prend +10) | facultatif |
 | `AGENTCLASS_HOME` | Dossier des données (défaut `~/.agentclass`) | facultatif |
 | `AGENTCLASS_OFF` | Désactive le hook sans le désinstaller | facultatif |
 
@@ -117,7 +120,6 @@ AgentClass/
 - Le champ temporaire `keys` est retiré du hook.
 
 ## Questions ouvertes
-- Port par défaut.
 - Délai d'arrêt automatique du serveur.
 - Lib de graphe ou rendu maison (lot 3).
 - Plan B pour la latence du hook, si besoin.
