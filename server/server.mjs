@@ -2,13 +2,16 @@
 // Écoute sur 127.0.0.1 seulement. Chaque requête vérifie Host, Origin et,
 // hors fichiers statiques, le jeton. Pas d'en-tête CORS.
 import { createServer } from 'node:http';
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { follow } from './readers/claude.mjs';
 import { startDemo } from './demo.mjs';
+import { claudeAgents, displayName, jobTitle } from './agents.mjs';
+import { config, home, roomUrl } from './config.mjs';
+
+export { home };
 
 const WEB = fileURLToPath(new URL('../web/', import.meta.url));
 const TYPES = /** @type {Record<string, string>} */ ({
@@ -19,12 +22,10 @@ const HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
   'X-Frame-Options': 'DENY',
-  'Content-Security-Policy': "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; frame-ancestors 'none'",
+  'Content-Security-Policy': "default-src 'self'; style-src 'self' https://fonts.googleapis.com; style-src-attr 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data:; frame-ancestors 'none'",
 };
 // ponytail: tampon en mémoire borné ; un vrai état par session arrive au lot 2.
 const MAX_EVENTS = 5000;
-
-export const home = () => process.env.AGENTCLASS_HOME || join(homedir(), '.agentclass');
 
 /** @param {string} a @param {string} b */
 // Hachage d'abord : longueurs égales garanties, timingSafeEqual ne peut pas lever d'exception.
@@ -32,25 +33,64 @@ const digest = (/** @type {string} */ s) => createHash('sha256').update(s).diges
 const same = (a, b) => timingSafeEqual(digest(a), digest(b));
 
 /**
- * @param {{ home?: string, port?: number, token?: string, demo?: boolean, onClose?: () => void }} [opts]
+ * Agents connus par IA, avec nom affiché et métier dans les deux langues.
+ * Les agents propres à un projet (.claude/agents) sont ajoutés pour chaque projet vu.
+ * @param {Iterable<string>} projects
+ */
+export function agentsPayload(projects) {
+  /** @param {{ id: string, name: string, description: string, origin: string }} a */
+  const view = (a) => {
+    const short = a.name.split(':').pop() ?? a.name;
+    return { id: a.id, name: short, origin: a.origin, label: { fr: displayName(a, 'fr'), en: displayName(a, 'en') }, job: jobTitle(short, a.description) };
+  };
+  const global = claudeAgents().map(view);
+  /** @type {Record<string, any[]>} */
+  const byProject = {};
+  for (const p of projects) {
+    const own = claudeAgents({ claudeHome: join(p, '.agentclass-aucun'), project: p }).filter((a) => a.origin === 'project');
+    if (own.length) byProject[p] = own.map(view);
+  }
+  return { claude: { agents: global, byProject } };
+}
+
+/**
+ * @param {{ home?: string, port?: number, token?: string, demo?: boolean, onClose?: () => void, scanMs?: number }} [opts]
  * @returns {Promise<{ url: string, port: number, token: string, close: () => Promise<void> }>}
  */
 export async function serve(opts = {}) {
   const dir = opts.home ?? home();
-  const token = opts.token ?? randomBytes(32).toString('base64url');
+  const token = opts.token ?? config(dir).token;
   /** @type {any[]} */
   const events = [];
   /** @type {Set<import('node:http').ServerResponse>} */
   const clients = new Set();
+  // IA branchées (au moins un événement reçu) et projets vus
+  /** @type {Set<string>} */
+  const sources = new Set();
+  /** @type {Set<string>} */
+  const projects = new Set();
+  let agents = '';
+  // Relit les agents toutes les quelques secondes : un agent ajouté ou retiré apparaît sans relancer.
+  const scan = () => {
+    let next;
+    try { next = JSON.stringify({ connected: [...sources], ...agentsPayload(projects) }); } catch { return; }
+    if (next === agents) return;
+    agents = next;
+    for (const c of clients) c.write(`event: agents\ndata: ${agents}\n\n`);
+  };
 
   /** @param {any} ev */
   const push = (ev) => {
+    sources.add(ev.source);
+    if (ev.project) projects.add(ev.project);
     events.push(ev);
     if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
     const msg = `data: ${JSON.stringify(ev)}\n\n`;
     for (const c of clients) c.write(msg);
   };
   const stop = opts.demo ? startDemo(push) : follow(join(dir, 'events'), push);
+  scan();
+  const scanner = setInterval(scan, opts.scanMs ?? 3000);
 
   let port = 0;
   const hosts = () => [`127.0.0.1:${port}`, `localhost:${port}`];
@@ -78,6 +118,7 @@ export async function serve(opts = {}) {
     if (req.method === 'GET' && url.pathname === '/events') {
       res.writeHead(200, { ...HEADERS, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
       res.write('retry: 2000\n\n');
+      res.write(`event: agents\ndata: ${agents}\n\n`);
       for (const ev of events) res.write(`data: ${JSON.stringify(ev)}\n\n`);
       clients.add(res);
       req.on('close', () => clients.delete(res));
@@ -97,12 +138,13 @@ export async function serve(opts = {}) {
   const close = () => (closing ??= new Promise((done) => {
     stop();
     clearInterval(ping);
+    clearInterval(scanner);
     for (const c of clients) c.end();
     server.close(() => { opts.onClose?.(); done(undefined); });
   }));
 
   port = await listen(server, opts.port ?? 0);
-  return { url: `http://127.0.0.1:${port}/?t=${token}`, port, token, close };
+  return { url: roomUrl(port, token), port, token, close };
 }
 
 /** @param {import('node:http').ServerResponse} res */

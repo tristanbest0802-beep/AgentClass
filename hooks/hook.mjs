@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 // Hook Claude Code : lit l'événement sur stdin, n'en garde que le strict minimum
-// et l'ajoute au JSONL du jour. N'écrit jamais sur stdout ni stderr (tout texte
-// peut finir dans le contexte et coûter des tokens) et sort toujours en 0.
-import { appendFileSync, mkdirSync } from 'node:fs';
+// et l'ajoute au JSONL du jour. Sort toujours en 0, n'écrit jamais sur stderr.
+// Une seule sortie sur stdout : au SessionStart, un JSON { systemMessage } montré à
+// l'utilisateur (lien de la salle). Jamais de texte brut ni d'additionalContext :
+// ils iraient dans le contexte du modèle et coûteraient des tokens.
+import { spawn } from 'node:child_process';
+import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, posix, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -79,18 +82,44 @@ export function reduce(input, now = new Date()) {
   return ev;
 }
 
+/**
+ * Au démarrage d'une session : lance le serveur s'il ne tourne pas, puis rend le lien.
+ * @param {string} home @returns {Promise<string>}
+ */
+async function ensureServer(home) {
+  const { config, roomUrl } = await import('../server/config.mjs');
+  try {
+    const s = JSON.parse(readFileSync(join(home, 'server.json'), 'utf8'));
+    process.kill(s.pid, 0);
+    return s.url;
+  } catch {
+    // Pas de serveur vivant : on le démarre, détaché, sans fenêtre ni sortie.
+  }
+  const c = config(home);
+  const bin = fileURLToPath(new URL('../bin/agentclass.mjs', import.meta.url));
+  spawn(process.execPath, [bin, 'start'], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+  return roomUrl(c.port, c.token);
+}
+
 function main() {
   if (process.env.AGENTCLASS_OFF) return;
   /** @type {Buffer[]} */
   const chunks = [];
   process.stdin.on('data', (c) => chunks.push(c));
-  process.stdin.on('end', () => {
+  process.stdin.on('end', async () => {
     try {
       const ev = reduce(JSON.parse(Buffer.concat(chunks).toString('utf8')));
       if (!ev) return;
-      const dir = join(process.env.AGENTCLASS_HOME || join(homedir(), '.agentclass'), 'events');
+      const home = process.env.AGENTCLASS_HOME || join(homedir(), '.agentclass');
+      const dir = join(home, 'events');
       mkdirSync(dir, { recursive: true });
       appendFileSync(join(dir, `claude-${String(ev.ts).slice(0, 10)}.jsonl`), JSON.stringify(ev) + '\n');
+      if (ev.kind === 'session_start') {
+        const url = await ensureServer(home);
+        // Seule sortie du hook : un systemMessage, affiché à l'utilisateur et jamais
+        // ajouté au contexte du modèle (0 token). Voir docs/02-TRD.md.
+        process.stdout.write(JSON.stringify({ systemMessage: `AgentClass : ta salle de classe est ouverte ici → ${url}` }));
+      }
     } catch {
       // Silence voulu : le hook ne doit jamais gêner Claude Code.
     }

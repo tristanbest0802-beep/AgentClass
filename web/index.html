@@ -4,22 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AgentClass</title>
+  <link rel="icon" href="/web/logo.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="/web/style.css">
 </head>
 <body>
-  <header class="bar">
-    <h1>AgentClass</h1>
-    <p class="status" id="status" role="status">Connexion…</p>
-  </header>
-  <main>
-    <p class="empty" id="empty">En attente de l'IA. Lance une session Claude Code, ou <code>agentclass demo</code>.</p>
-    <table class="log" id="log" hidden>
-      <thead><tr><th>Heure</th><th>Session</th><th>Agent</th><th>Événement</th><th>Outil</th><th>Cible</th><th>Durée</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </main>
+  <header class="top" id="top"></header>
+  <main class="view" id="view"></main>
+  <div class="sr" aria-live="polite" id="live"></div>
   <script type="module" src="/web/app.js"></script>
 </body>
 </html>

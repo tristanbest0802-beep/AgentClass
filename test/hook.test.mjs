@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -76,6 +76,24 @@ test('processus : entrée invalide, sortie 0, rien sur stdout ni stderr', () => 
   assert.equal(r.status, 0);
   assert.equal(r.stdout.length, 0);
   assert.equal(r.stderr.length, 0);
+});
+
+test('SessionStart : seule sortie = { systemMessage } avec le lien, rien pour le modèle', () => {
+  const home = mkdtempSync(join(tmpdir(), 'agentclass-'));
+  // Serveur « vivant » simulé : le PID du test, pour ne rien lancer.
+  writeFileSync(join(home, 'server.json'), JSON.stringify({ pid: process.pid, url: 'http://127.0.0.1:47100/?t=x' }));
+  const r = spawnSync(process.execPath, [HOOK], { input: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 's' }), env: { ...process.env, AGENTCLASS_HOME: home } });
+  assert.equal(r.status, 0);
+  assert.equal(r.stderr.length, 0);
+  const out = JSON.parse(r.stdout.toString());
+  assert.deepEqual(Object.keys(out), ['systemMessage']);
+  assert.match(out.systemMessage, /http:\/\/127\.0\.0\.1:47100\/\?t=x/);
+});
+
+test('PreToolUse : toujours rien sur stdout', () => {
+  const home = mkdtempSync(join(tmpdir(), 'agentclass-'));
+  const r = spawnSync(process.execPath, [HOOK], { input: JSON.stringify({ hook_event_name: 'PreToolUse', session_id: 's', tool_name: 'Read' }), env: { ...process.env, AGENTCLASS_HOME: home } });
+  assert.equal(r.stdout.length, 0);
 });
 
 test('processus : une ligne JSONL écrite dans le fichier du jour', () => {

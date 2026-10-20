@@ -1,0 +1,11 @@
+{
+  "name": "agentclass",
+  "owner": { "name": "tristanbest0802-beep" },
+  "plugins": [
+    {
+      "name": "agentclass",
+      "source": "./",
+      "description": "Vois en direct ce que font tes agents IA dans une salle de classe 3D, sans consommer un seul token."
+    }
+  ]
+}

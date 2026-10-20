@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // CLI : agentclass [start|demo|stop]
 import { clearState, home, running, serve, writeState } from '../server/server.mjs';
+import { config } from '../server/config.mjs';
 
 const cmd = process.argv[2] ?? 'start';
-const port = Number(process.env.AGENTCLASS_PORT) || 47100;
 const dir = home();
+const port = config(dir).port;
 
 if (cmd === 'stop') {
   const s = running(dir);
@@ -47,7 +48,10 @@ if (cmd === 'stop') {
       console.log(`AgentClass : ${srv.url}`);
     }
   }
+} else if (cmd === 'reset-token') {
+  config(dir, { reset: true });
+  console.log('Nouveau lien créé. Relance le serveur : agentclass stop puis agentclass start.');
 } else {
-  console.log('Usage : agentclass [start|demo|stop]');
+  console.log('Usage : agentclass [start|demo|stop|reset-token]');
   process.exitCode = 1;
 }
