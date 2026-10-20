@@ -1,6 +1,6 @@
 <div align="center">
 
-<!-- Logo à venir : assets/logo.png -->
+<img src="assets/logo.svg" alt="Logo AgentClass" width="120">
 
 # AgentClass
 
