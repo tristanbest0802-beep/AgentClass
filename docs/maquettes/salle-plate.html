@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette salle à plat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #F2F0E9; --surface: #FFFFFF; --text: #1E2B25; --muted: #4A5751; --line: #DAD6CA;
+  --slate: #2F4A3F; --slate-edge: #253C33; --chalk: #F2F0E9; --chalk-dim: #B9C7BF;
+  --wood: #C89B6D; --wood-face: #A97E53; --wood-light: #E4C9A8;
+  --go: #FF8A8A; --back: #6FD3A0; --alert: #B4531A;
+  --sans: "Schibsted Grotesk", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #141A17; --surface: #1E2622; --text: #ECEAE3; --muted: #A9B3AD; --line: #2C3631;
+    --slate: #24392F; --slate-edge: #1B2C24; --chalk: #ECEAE3; --wood: #A87E55; --wood-face: #85613F; --wood-light: #5A4632; --alert: #F0A35E; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 400 15px/1.5 var(--sans); min-height: 100dvh; }
+.i { display: inline-block; width: 18px; height: 18px; background: currentColor; flex: none;
+  -webkit-mask: var(--u) center / contain no-repeat; mask: var(--u) center / contain no-repeat; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Barre du haut : onglets de session */
+.top { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); }
+.brand { font-weight: 600; font-size: 18px; margin-right: 12px; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; flex: 1; }
+.tab { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border: 1px solid transparent; border-radius: 6px;
+  background: none; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.tab:hover { background: var(--surface); }
+.tab[aria-selected="true"] { background: var(--surface); border-color: var(--line); color: var(--text); font-weight: 500; }
+.tab:focus-visible, .tool:focus-visible, .desk:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--back); }
+.dot.idle { background: var(--line); }
+.tools { display: flex; gap: 4px; }
+.tool { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer; }
+.tool:hover { background: var(--surface); color: var(--text); }
+
+/* Salle */
+.room { max-width: 1200px; margin: 0 auto; padding: 24px 16px 32px; display: grid; gap: 24px; }
+
+/* Tableau noir : cadre bois, ardoise */
+.board { background: var(--slate); color: var(--chalk); border: 10px solid var(--wood); border-bottom-width: 14px; border-radius: 4px;
+  box-shadow: inset 0 0 0 2px var(--slate-edge); padding: 20px 24px; display: grid; grid-template-columns: 180px 1fr; gap: 24px; min-height: 300px; position: relative; }
+.board h2 { margin: 0 0 12px; font-size: 14px; font-weight: 500; color: var(--chalk-dim); grid-column: 1 / -1; display: flex; justify-content: space-between; }
+.ai { align-self: center; justify-self: center; display: grid; place-items: center; gap: 6px; width: 120px; height: 120px; border: 2px dashed var(--chalk-dim); border-radius: 50%; text-align: center; font-size: 14px; }
+.files { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; align-content: start; }
+.file { display: grid; grid-template-columns: 16px 1fr auto auto; align-items: center; gap: 12px; padding: 6px 8px; border-radius: 4px; font-family: var(--mono); font-size: 13px; }
+.file.hot { background: rgb(255 255 255 / .07); }
+.file .n { color: var(--chalk-dim); font-size: 12px; }
+.mark { width: 12px; height: 12px; }
+.mark.go { border-radius: 50%; background: var(--go); }
+.mark.back { background: var(--back); transform: rotate(45deg) scale(.8); }
+.who { font-family: var(--sans); font-size: 12px; color: var(--chalk-dim); }
+.hint { grid-column: 1 / -1; margin: 8px 0 0; font-size: 13px; color: var(--chalk-dim); }
+.hint code { font-family: var(--mono); color: var(--chalk); }
+/* Point qui voyage du nœud IA vers un fichier, puis revient */
+.travel { position: absolute; left: 150px; top: 112px; width: 12px; height: 12px; border-radius: 50%; background: var(--go);
+  animation: travel 2.4s ease-out infinite; }
+@keyframes travel {
+  0% { transform: translate(0, 0); background: var(--go); border-radius: 50%; }
+  40% { transform: translate(120px, -38px); background: var(--go); border-radius: 50%; }
+  50% { transform: translate(120px, -38px) rotate(45deg); background: var(--back); border-radius: 0; }
+  90%, 100% { transform: translate(0, 0) rotate(45deg); background: var(--back); border-radius: 0; opacity: .0; }
+}
+@media (prefers-reduced-motion: reduce) { .travel { animation: none; display: none; } }
+
+/* Bureau du prof */
+.teacher { justify-self: center; width: min(520px, 100%); display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center;
+  background: var(--wood); border-bottom: 8px solid var(--wood-face); border-radius: 6px; padding: 14px 18px; color: #241A10; }
+.screen { width: 64px; height: 48px; border-radius: 4px; background: #1E2B25; color: var(--chalk); display: grid; place-items: center; border: 3px solid #3B3128; }
+.teacher strong { display: block; font-size: 16px; }
+.teacher .now { font-size: 13px; }
+.teacher .now .mono { font-size: 12px; }
+
+/* Rangées de pupitres */
+.rows h2 { margin: 0 0 12px; font-size: 14px; font-weight: 500; color: var(--muted); }
+.desks { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px 16px; }
+.desk { position: relative; text-align: left; font: inherit; color: inherit; cursor: pointer; border: 0; padding: 0; background: none; display: grid; gap: 6px; }
+.top-wood { background: var(--wood-light); border-bottom: 6px solid var(--wood-face); border-radius: 4px; padding: 10px 12px; min-height: 92px; display: grid; gap: 2px; align-content: start; color: var(--text); }
+.desk .name { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.desk .meta { font-size: 13px; color: var(--muted); }
+.seat { justify-self: center; width: 46%; height: 12px; border-radius: 0 0 6px 6px; background: var(--wood-face); opacity: .55; }
+.desk.active .top-wood { background: var(--wood); color: #241A10; box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--back); }
+.desk.active .meta { color: #3A2A1A; }
+.desk.active .seat { opacity: 1; }
+.desk.empty .top-wood { background: none; border: 2px dashed var(--line); border-bottom-width: 6px; color: var(--muted); }
+.state { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; }
+.badge { position: absolute; top: -8px; right: -6px; display: flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--surface); color: var(--alert); border: 1px solid currentColor; font-size: 12px; font-weight: 500; }
+
+@media (max-width: 767px) {
+  .top { flex-wrap: wrap; }
+  .tabs { order: 3; flex-basis: 100%; }
+  .tools { margin-left: auto; }
+  .board { grid-template-columns: 1fr; padding: 16px; border-width: 8px; border-bottom-width: 12px; }
+  .ai { width: auto; height: auto; border-radius: 6px; grid-auto-flow: column; padding: 8px 12px; justify-self: start; }
+  .travel { display: none; }
+  .desks { grid-template-columns: repeat(2, 1fr); gap: 16px 12px; }
+  .tool { width: 44px; height: 44px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <span class="brand">AgentClass</span>
+  <nav class="tabs" role="tablist" aria-label="Sessions">
+    <button class="tab" role="tab" aria-selected="true"><span class="dot"></span>boutique<span class="i" style="--u:url(https://api.iconify.design/tabler/terminal-2.svg)" aria-label="Claude"></span></button>
+    <button class="tab" role="tab" aria-selected="false"><span class="dot idle"></span>AgentClass</button>
+  </nav>
+  <div class="tools">
+    <button class="tool" aria-label="Langue"><span class="i" style="--u:url(https://api.iconify.design/tabler/language.svg)"></span></button>
+    <button class="tool" aria-label="Mode stream"><span class="i" style="--u:url(https://api.iconify.design/tabler/eye-off.svg)"></span></button>
+    <button class="tool" aria-label="Réglages"><span class="i" style="--u:url(https://api.iconify.design/tabler/settings.svg)"></span></button>
+  </div>
+</header>
+
+<main class="room">
+  <section class="board" aria-label="Tableau">
+    <h2><span>Fichiers touchés</span><span class="mono">6 fichiers</span></h2>
+    <div class="ai"><span class="i" style="--u:url(https://api.iconify.design/tabler/robot.svg);width:28px;height:28px"></span>IA</div>
+    <ul class="files">
+      <li class="file hot"><span class="mark go" aria-label="aller"></span>src/cart.js<span class="who">Explore</span><span class="n">lu 4×</span></li>
+      <li class="file"><span class="mark back" aria-label="retour"></span>src/api/orders.js<span class="who">code-reviewer</span><span class="n">lu 1×</span></li>
+      <li class="file"><span></span>src/app.js<span class="who">Explore</span><span class="n">lu 1×</span></li>
+      <li class="file"><span></span>test/cart.test.js<span class="who">code-reviewer</span><span class="n">échec</span></li>
+      <li class="file"><span></span>src/ui/Button.jsx<span class="who">principal</span><span class="n">modifié</span></li>
+      <li class="file"><span></span>package.json<span class="who">principal</span><span class="n">lu 1×</span></li>
+    </ul>
+    <p class="hint">Pas encore de graphe. Lance <code>/graphify</code> dans ton projet pour voir les liens entre fichiers.</p>
+    <span class="travel" aria-hidden="true"></span>
+  </section>
+
+  <section class="teacher" aria-label="Bureau du prof">
+    <div class="screen"><span class="i" style="--u:url(https://api.iconify.design/tabler/terminal-2.svg);width:24px;height:24px"></span></div>
+    <div>
+      <strong>Claude, agent principal</strong>
+      <div class="now">Attend ses 2 agents · dernier outil <span class="mono">Agent</span> · <span class="mono">00:42</span></div>
+    </div>
+  </section>
+
+  <section class="rows" aria-label="Agents">
+    <h2>Agents de la classe · 2 actifs</h2>
+    <div class="desks">
+      <button class="desk active">
+        <span class="badge"><span class="i" style="--u:url(https://api.iconify.design/tabler/alert-triangle.svg);width:14px;height:14px"></span>boucle</span>
+        <span class="top-wood">
+          <span class="name"><span class="i" style="--u:url(https://api.iconify.design/tabler/search.svg)"></span>Explore</span>
+          <span class="meta">Lit <span class="mono">src/cart.js</span></span>
+          <span class="meta state"><span class="i" style="--u:url(https://api.iconify.design/tabler/clock.svg);width:14px;height:14px"></span><span class="mono">00:18</span> · actif</span>
+        </span>
+        <span class="seat"></span>
+      </button>
+      <button class="desk active">
+        <span class="top-wood">
+          <span class="name"><span class="i" style="--u:url(https://api.iconify.design/tabler/code.svg)"></span>code-reviewer</span>
+          <span class="meta">Cherche dans <span class="mono">src/api</span></span>
+          <span class="meta state"><span class="i" style="--u:url(https://api.iconify.design/tabler/clock.svg);width:14px;height:14px"></span><span class="mono">00:14</span> · actif</span>
+        </span>
+        <span class="seat"></span>
+      </button>
+      <button class="desk">
+        <span class="top-wood">
+          <span class="name"><span class="i" style="--u:url(https://api.iconify.design/tabler/pencil.svg)"></span>doc-writer</span>
+          <span class="meta">Rédige la documentation</span>
+          <span class="meta state">au repos</span>
+        </span>
+        <span class="seat"></span>
+      </button>
+      <button class="desk">
+        <span class="top-wood">
+          <span class="name"><span class="i" style="--u:url(https://api.iconify.design/tabler/user-search.svg)"></span>security-auditor</span>
+          <span class="meta">Cherche les failles</span>
+          <span class="meta state">au repos</span>
+        </span>
+        <span class="seat"></span>
+      </button>
+      <div class="desk empty" aria-hidden="true">
+        <span class="top-wood"><span class="meta">Place libre</span></span>
+        <span class="seat"></span>
+      </div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

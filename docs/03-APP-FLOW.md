@@ -11,16 +11,18 @@ Date : 2026-10-20 · Statut : brouillon
 Une seule page. Les panneaux sont des tiroirs latéraux, pas des pages.
 
 ## Navigation
-- En haut : onglets des sessions (une salle par session ; nom du projet, logo de l'IA, pastille d'activité).
+- En haut : onglets des classes (une classe par IA ; nom de l'IA, projet en cours, pastille d'activité), bouton « + » pour ajouter une classe et choisir son IA, bascule « 3D / Dessus ».
+- Plusieurs sessions de la même IA : la classe montre la session la plus récemment active ; un petit sélecteur dans la classe permet d'en voir une autre.
+- Une seule page pour toutes les IA du PC : même lien tous les jours (port fixe, jeton gardé dans `~/.agentclass/config.json`).
 - En haut à droite : bascule FR/EN, bascule du mode stream, bouton des réglages.
 - Entrées : icône dans Claude desktop (lot 7), commande `agentclass start` ou `/agentclass`, lien affiché au démarrage du serveur.
 
 ## Parcours principal
 1. L'utilisateur lance une session Claude Code. Le hook SessionStart démarre le serveur s'il ne tourne pas déjà.
-2. Il ouvre la salle (icône, commande ou lien). La page affiche l'onglet de la session en cours.
+2. Il ouvre la salle (icône, commande ou lien, toujours le même). La page affiche la classe de l'IA en cours.
 3. L'IA lit un fichier. Un point rouge part du nœud « IA » vers le fichier sur le tableau, puis revient en vert au résultat.
 4. L'IA lance un sous-agent. Sa chaise s'allume, sa durée défile, puis la chaise s'éteint à la fin.
-5. Une deuxième session démarre : un nouvel onglet apparaît.
+5. Une autre IA démarre (Codex…) : sa classe apparaît dans les onglets.
 
 ## Autres parcours
 - Mode démo : `agentclass demo` ouvre la salle avec des événements factices.

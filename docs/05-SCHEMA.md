@@ -75,7 +75,7 @@ erDiagram
 | server.json | CLI, hook | serveur | serveur | serveur à l'arrêt |
 
 ## Authentification
-Pas de compte. Le serveur génère un jeton aléatoire de 32 octets (`crypto.randomBytes`) à chaque démarrage. Il l'écrit dans `server.json` et l'ajoute au lien d'ouverture. Requête sans jeton valide : 403.
+Pas de compte. Le serveur génère un jeton aléatoire de 32 octets (`crypto.randomBytes`) une seule fois et le garde dans `~/.agentclass/config.json` : le lien reste le même d'un jour à l'autre. `agentclass reset-token` en crée un nouveau. Requête sans jeton valide : 403.
 
 ## Données personnelles
 - Aucune donnée ne quitte la machine.

@@ -10,7 +10,7 @@ Date : 2026-10-20 · Statut : brouillon
 | Serveur | Node.js (LTS), modules natifs `http`, `fs`, `crypto` | Aucune dépendance au runtime |
 | Temps réel | SSE (`text/event-stream`) | Natif dans les navigateurs, sens unique suffisant |
 | Données | Fichiers JSONL locaux dans `~/.agentclass/` | Écriture en append, simple, sans base |
-| Authentification | Aucun compte. Jeton aléatoire par démarrage pour accéder au flux | Protège le port local des autres pages web |
+| Authentification | Aucun compte. Jeton aléatoire créé une fois, gardé dans `~/.agentclass/config.json` (droits utilisateur seulement), pour un lien stable | Protège le port local des autres pages web |
 | Hébergement | Local seulement (127.0.0.1) | 0 token, rien en ligne |
 
 ## Architecture

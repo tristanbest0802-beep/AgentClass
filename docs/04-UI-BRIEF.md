@@ -7,7 +7,18 @@ Date : 2026-10-20 · Statut : brouillon
 - Polices : Schibsted Grotesk pour l'interface, IBM Plex Mono pour les noms de fichiers.
 - Densité moyenne : la salle occupe l'écran, les détails s'ouvrent dans un panneau.
 - Animations riches mais légères : points qui voyagent, chaises qui s'allument. `prefers-reduced-motion` respecté.
-- Construction en deux temps : rendu à plat aux lots 2 et 3, isométrique au lot 4.
+- Décision du 2026-10-20 (retour sur la maquette à plat) : la salle est une maquette 3D dans une boîte, vue isométrique de trois quarts, qu'on fait tourner à la souris. Un bouton en haut de la page bascule entre « 3D » et « Dessus » (vue de dessus). Rendu en CSS 3D, sans bibliothèque. Dès le lot 2.
+- Élèves : un petit personnage pixel art (style jeu rétro, inspiré de la mascotte de l'IA sans la copier) assis à chaque table, un par agent connu. Agent inactif : yeux fermés, « Z z z » animés au-dessus. Agent actif : yeux ouverts, clignement, petite activité sur la table. Chaque élève a un accessoire distinct (bonnet, nœud, casque…) pour le reconnaître. Le prof (agent principal) est plus grand, avec des lunettes.
+- Classes : une classe par couple IA + projet (deux projets de Claude = deux classes). Le projet se choisit dans la barre du haut de la classe. La teinte des murs dépend du projet.
+- Galerie : le bouton « + » réduit la classe ouverte en vignette (View Transitions) et montre toutes les classes en cartes (plan vu de dessus, nom de l'IA, projet, agents actifs). Une carte « + » ouvre la liste des IA trouvées sur le PC ; les IA sans plugin sont grisées. Ajouter une IA lance la lecture de ses agents (état « Recherche des agents… »).
+- Salle à 4 murs. Les murs tournés vers la caméra s'abaissent automatiquement ; rotation libre sur 360°, plus des boutons de rotation et de recentrage au clavier. Chaque mur a une zone `.wall-slot` pour ajouter un décor (tableau au nord, fenêtres à l'ouest, horloge et étagère à l'est, porte au sud).
+- Thème : bascule soleil / lune avec pastille glissante dans la barre du haut ; mémorisée, sinon celle du système. La salle garde ses couleurs dans les deux thèmes.
+- Toutes les IA peuvent être ajoutées, même sans plugin installé : la classe affiche 3 places libres, le prof dort, et la barre d’état dit que la classe se remplira à l’installation du plugin.
+- Placement des tables automatique : 4 au plus par rangée, rangées équilibrées et centrées, la salle s’allonge s’il faut plus de rangées. Jamais de table contre un mur.
+- Langue : sélecteur FR | EN dans la barre du haut, mémorisé, sinon la langue du navigateur.
+- Mode stream (bouton « Stream », œil) : chemins réduits au nom de fichier, noms de projets remplacés par « Projet A, B… », bandeau visible tant qu’il est actif.
+- Logo AgentClass dans la barre du haut, à côté du nom.
+- Maquette de référence : `docs/maquettes/salle-iso.html`.
 
 ## Palette
 | Rôle | Clair | Sombre | Contraste vérifié |
@@ -54,7 +65,7 @@ Schibsted Grotesk : ronde et nette, elle a du caractère sans faire « template 
 - Devant : le bureau du prof, avec son petit écran et le logo de l'IA.
 - Au centre : les rangées de chaises. Une chaise s'ajoute quand un agent apparaît. Au-delà d'un seuil, les chaises inactives sont regroupées.
 - Ce qui doit ressortir : qui est actif, et le trajet des points.
-- Sous 768 px : vue à plat, le tableau en haut et les chaises en grille dessous, sans défilement horizontal.
+- Sous 768 px : vue « Dessus » par défaut, sans défilement horizontal.
 
 ### Panneau agent
 Nom, description courte, état, durée, dernier outil utilisé, nombre de fichiers lus.
@@ -62,7 +73,7 @@ Nom, description courte, état, durée, dernier outil utilisé, nombre de fichie
 ## Icônes et images
 - Icônes : Tabler, via Iconify, licence MIT.
 - Logos Claude et OpenAI : kits officiels, sous réserve de leurs règles de marque. Repli : icône neutre et nom de l'IA.
-- Décor de la salle : CSS ou SVG géométrique simple (formes isométriques), pas d'illustration dessinée à la main. Un emplacement est prévu pour de vraies illustrations plus tard.
+- Décor de la salle : faces CSS 3D (sol, murs, tables en boîtes). Personnages : sprites pixel art générés depuis des grilles de pixels, pas d'illustration dessinée à la main. Référence visuelle : images générées par l'utilisateur le 2026-10-20 (salle isométrique et vue de dessus).
 
 ## Animations
 - Trajet d'un point : 400 à 700 ms, réglable par le curseur de vitesse. Courbe ease-out.

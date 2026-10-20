@@ -8,9 +8,9 @@ Chaque lot laisse le projet dans un état qui marche. Une relecture par lot.
 |---|---|---|---|
 | 0 | Squelette et capture réelle | — | `node --test` passe, une vraie session avec 2 sous-agents est capturée, la latence est mesurée |
 | 1 | Serveur local sécurisé, flux brut, mode démo | 0 | La page affiche la liste brute des événements en direct ; les tests de sécurité passent |
-| 2 | Salle à plat : chaises, prof, indicateurs, onglets | 1 | F4, F5, F6, F8 (chaises), F9 en mode démo et en réel |
+| 2 | Salle 3D isométrique (rotation, vue Dessus), élèves pixel art, prof, indicateurs, classes par IA, lien stable | 1 | F4, F5, F6, F8 (chaises), F9 en mode démo et en réel |
 | 3 | Tableau : liste des fichiers, puis Graphify en option avec points | 2 | F7, F8 (nœuds) |
-| 4 | Mode stream, isométrique, FR/EN, thèmes, accessibilité | 3 | F10, F11, contrastes mesurés |
+| 4 | Mode stream, FR/EN, thèmes, accessibilité, finitions | 3 | F10, F11, contrastes mesurés |
 | 5 | Démarrage auto, purge, désinstallation, dépôt alpha public | 4 | F12, README avec accroche et GIF |
 | 6 | Packaging marketplace Claude et npm | 5 | Installation propre sur une machine neuve |
 | 7 | Icône dans Claude desktop (mod) | 5 | F14, ou repli par la commande `/agentclass` |

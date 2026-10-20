@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette AgentClass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+@property --rx { syntax: '<angle>'; inherits: true; initial-value: 56deg; }
+@property --rz { syntax: '<angle>'; inherits: true; initial-value: 38deg; }
+@property --fold { syntax: '<angle>'; inherits: true; initial-value: -90deg; }
+@property --shift { syntax: '<length>'; inherits: false; initial-value: 0px; }
+
+/* ---------- Jetons ---------- */
+:root {
+  --bg: #F2F0E9; --bg-2: #E9E6DC; --surface: #FFFFFF; --text: #1E2B25; --muted: #56635C; --line: #DAD6CA; --line-strong: #C3BEAF;
+  --live: #2E9E6A;
+  --chalk: #F2F0E9; --chalk-dim: #B9C7BF;
+  --floor: #C9A074; --floor-2: #C29868; --plank: #B48A5D; --trim: #8F633B;
+  --wood-top: #C99566; --wood-face: #94653C; --wood-side: #7E5432; --chair: #6E4A2C; --chair-top: #8A5E39;
+  --go: #FF7A7A; --back: #5FD39A;
+  --sans: "Schibsted Grotesk", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --r-ctl: 8px; --r-panel: 12px;
+  --ease: cubic-bezier(.2,.7,.2,1);
+}
+:root[data-theme="dark"] { --bg: #0E1210; --bg-2: #141A17; --surface: #1A201D; --text: #ECEAE3; --muted: #A3ADA7; --line: #29312D; --line-strong: #3A443F; color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #0E1210; --bg-2: #141A17; --surface: #1A201D; --text: #ECEAE3; --muted: #A3ADA7; --line: #29312D; --line-strong: #3A443F; color-scheme: dark; }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--text); font: 400 14px/1.5 var(--sans); display: grid; grid-template-rows: 56px 1fr; height: 100dvh; overflow: hidden; transition: background-color 300ms, color 300ms; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.i { display: inline-block; width: 18px; height: 18px; background: currentColor; flex: none; -webkit-mask: var(--u) center / contain no-repeat; mask: var(--u) center / contain no-repeat; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Barre du haut ---------- */
+.top { display: flex; align-items: center; gap: 8px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--line); background: var(--bg); position: relative; z-index: 10; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: -.01em; margin-right: 8px; white-space: nowrap; }
+.brand svg { width: 26px; height: 26px; border-radius: 6px; flex: none; }
+.sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: var(--surface); cursor: pointer; white-space: nowrap; transition: border-color 150ms, background-color 150ms; }
+.btn:hover { border-color: var(--line-strong); }
+.btn.ghost { border-color: transparent; background: none; }
+.btn.ghost:hover { background: var(--surface); border-color: var(--line); }
+.btn.icon { width: 36px; padding: 0; justify-content: center; }
+.btn small { color: var(--muted); font-size: 13px; }
+.crumb { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.crumb .title { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; padding: 0 4px; white-space: nowrap; }
+.spacer { flex: 1; }
+.seg { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--bg-2); border: 1px solid var(--line); position: relative; }
+.seg button { position: relative; z-index: 1; height: 28px; min-width: 56px; padding: 0 12px; border: 0; border-radius: 7px; background: none; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 500; transition: color 200ms; }
+.seg button[aria-pressed="true"] { color: var(--text); }
+.seg .thumb { position: absolute; top: 3px; left: 3px; height: 28px; border-radius: 7px; background: var(--surface); box-shadow: 0 1px 2px rgb(0 0 0 / .12), 0 0 0 1px var(--line); transition: transform 300ms var(--ease), width 300ms var(--ease); }
+.theme button { min-width: 36px; padding: 0; display: grid; place-items: center; }
+.langs button { min-width: 40px; padding: 0 8px; font-family: var(--mono); font-size: 12px; letter-spacing: .02em; }
+.btn[aria-pressed="true"].stream { background: #FFE8D6; border-color: #E9A97A; color: #7A3A12; }
+.stream-flag { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--r-panel); background: #FFE8D6; color: #7A3A12; border: 1px solid #E9A97A; font-size: 13px; font-weight: 500; }
+.hud .left { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.empty-note { color: var(--muted); }
+.status .btn { height: 30px; font-size: 13px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 22%, transparent); flex: none; }
+.dot.idle { background: var(--line-strong); box-shadow: none; }
+
+/* Menus déroulants */
+.pop { position: relative; }
+.menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 260px; padding: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); box-shadow: 0 12px 32px rgb(0 0 0 / .14), 0 2px 6px rgb(0 0 0 / .06); z-index: 20; transform-origin: top left; animation: pop 160ms var(--ease); }
+.menu[hidden] { display: none; }
+@keyframes pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.menu h3 { margin: 6px 10px 6px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px; background: none; cursor: pointer; text-align: left; }
+.item:hover:not([disabled]), .item:focus-visible { background: var(--bg-2); }
+.item[disabled] { cursor: default; opacity: .5; }
+.item .meta { margin-left: auto; font-size: 12px; color: var(--muted); }
+.item .check { margin-left: auto; color: var(--live); }
+.swatch { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; flex: none; }
+.swatch svg { width: 16px; height: auto; }
+
+/* ---------- Scène 3D ---------- */
+.view { position: relative; overflow: hidden; }
+.stage { position: absolute; inset: 0; display: grid; place-items: center; perspective: 2600px; cursor: grab; touch-action: none; user-select: none;
+  background: radial-gradient(120% 90% at 50% 40%, var(--bg) 55%, var(--bg-2)); }
+.stage.dragging { cursor: grabbing; }
+.fit { transform: scale(var(--fit, 1)) translateY(var(--shift)); transform-style: preserve-3d; transition: --shift 700ms var(--ease); }
+.room { --W: 780px; --D: 640px; --H: 210px; width: var(--W); height: var(--D); position: relative; transform-style: preserve-3d;
+  transform: rotateX(var(--rx)) rotateZ(var(--rz)); transition: --rx 700ms var(--ease), --rz 700ms var(--ease), --fold 700ms var(--ease); }
+.dragging .room { transition: none; }
+.layer { position: absolute; inset: 0; transform-style: preserve-3d; }
+
+/* Sol : lames de parquet */
+.floor { position: absolute; inset: 0; background-color: var(--floor);
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 63px, var(--plank) 63px 64px),
+    repeating-linear-gradient(0deg, transparent 0 159px, rgb(0 0 0 / .06) 159px 160px),
+    linear-gradient(90deg, var(--floor) 50%, var(--floor-2) 50%);
+  background-size: 64px 100%, 128px 160px, 128px 100%; }
+.plinth { position: absolute; background: var(--trim); }
+.plinth.s { left: 0; top: var(--D); width: var(--W); height: 22px; transform-origin: top; transform: rotateX(-90deg); filter: brightness(.82); }
+.plinth.e { left: var(--W); top: 0; width: 22px; height: var(--D); transform-origin: left; transform: rotateY(90deg); filter: brightness(.7); }
+.plinth.n { left: 0; top: -22px; width: var(--W); height: 22px; transform-origin: bottom; transform: rotateX(90deg); filter: brightness(.6); }
+.plinth.w { left: -22px; top: 0; width: 22px; height: var(--D); transform-origin: right; transform: rotateY(-90deg); filter: brightness(.65); }
+
+/* Murs : un élément par côté, face intérieure à l'endroit. Ajouter un décor = ajouter un enfant à .wall-slot. */
+.wall { position: absolute; height: var(--H); transform-origin: bottom center; background: var(--wall); border-top: 8px solid var(--trim);
+  clip-path: inset(0 0 0 0); transition: clip-path 450ms var(--ease); overflow: hidden; }
+.wall::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18px; background: var(--trim); }
+.wall.cut { clip-path: inset(calc(100% - 26px) 0 0 0); }
+.wall.n { left: 0; top: calc(var(--H) * -1); width: var(--W); transform: rotateX(var(--fold)); }
+.wall.s { left: 0; top: calc(var(--D) - var(--H)); width: var(--W); transform: rotateZ(180deg) rotateX(-90deg); filter: brightness(.86); }
+.wall.e { left: calc(var(--W) - var(--D) / 2); top: calc(var(--D) / 2 - var(--H)); width: var(--D); transform: rotateZ(90deg) rotateX(-90deg); filter: brightness(.9); }
+.wall.w { left: calc(var(--D) / -2); top: calc(var(--D) / 2 - var(--H)); width: var(--D); transform: rotateZ(-90deg) rotateX(-90deg); filter: brightness(.94); }
+.wall-slot { position: absolute; inset: 0; }
+.board { position: absolute; left: 130px; top: 26px; width: 520px; height: 146px; background: #2B4339; border: 8px solid #A87A4C; border-bottom-width: 12px; color: var(--chalk);
+  display: grid; grid-template-columns: 1fr 150px; padding: 10px 14px; gap: 10px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .25); }
+.board svg { width: 100%; height: 100%; overflow: visible; }
+.board ul { margin: 0; padding: 0 0 0 12px; list-style: none; border-left: 1px solid var(--chalk-dim); font: 400 12.5px/1.6 var(--mono); }
+.board .hot { color: #FFE9A8; }
+.packet { offset-path: path("M 40 92 C 90 40, 160 40, 210 60"); animation: packet 2.6s var(--ease) infinite; }
+@keyframes packet { 0% { offset-distance: 0%; } 45% { offset-distance: 100%; fill: var(--go); } 55% { offset-distance: 100%; fill: var(--back); } 100% { offset-distance: 0%; fill: var(--back); } }
+.window { position: absolute; top: 46px; width: 120px; height: 120px; border: 8px solid #A87A4C; background: linear-gradient(#D7ECEF, #AFD0D8); display: grid; grid-template: 1fr 1fr / 1fr 1fr; gap: 6px; }
+.window i { background: rgb(255 255 255 / .18); }
+.door { position: absolute; bottom: 18px; width: 96px; height: 160px; background: #8A5D36; border: 6px solid #A87A4C; border-bottom: 0; }
+.door::after { content: ""; position: absolute; right: 10px; top: 80px; width: 8px; height: 8px; border-radius: 50%; background: #E3C08F; }
+.clock { position: absolute; top: 40px; width: 54px; height: 54px; border-radius: 50%; background: #F6F1E4; border: 5px solid #3B2A1C; }
+.clock::before, .clock::after { content: ""; position: absolute; left: 50%; bottom: 50%; width: 3px; background: #3B2A1C; transform-origin: bottom; border-radius: 2px; }
+.clock::before { height: 15px; transform: translateX(-50%) rotate(40deg); }
+.clock::after { height: 19px; transform: translateX(-50%) rotate(170deg); }
+.shelf { position: absolute; top: 70px; width: 130px; height: 70px; border-bottom: 8px solid #A87A4C; display: flex; align-items: flex-end; gap: 3px; padding: 0 8px; }
+.shelf b { width: 12px; background: var(--c); height: var(--h); }
+
+/* Meubles : boîtes à 5 faces, pour rester justes sous tous les angles */
+.box { position: absolute; transform-style: preserve-3d; }
+.box > i { position: absolute; display: block; }
+.box .t { inset: 0; background: var(--top, var(--wood-top)); transform: translateZ(var(--h)); box-shadow: inset 0 -3px 0 rgb(0 0 0 / .1), inset 0 1px 0 rgb(255 255 255 / .18); }
+.box .fs { left: 0; width: 100%; height: var(--h); top: calc(100% - var(--h)); background: var(--face, var(--wood-face)); transform-origin: bottom; transform: rotateX(-90deg); }
+.box .fn { left: 0; width: 100%; height: var(--h); top: 0; background: var(--face, var(--wood-face)); transform-origin: top; transform: rotateX(90deg); filter: brightness(.8); }
+.box .fe { top: 0; height: 100%; width: var(--h); left: calc(100% - var(--h)); background: var(--side, var(--wood-side)); transform-origin: right; transform: rotateY(90deg); }
+.box .fw { top: 0; height: 100%; width: var(--h); left: 0; background: var(--side, var(--wood-side)); transform-origin: left; transform: rotateY(-90deg); }
+.chair { --top: var(--chair-top); --face: var(--chair); --side: #5B3C23; }
+.contact { position: absolute; background: rgb(60 35 15 / .16); border-radius: 3px; }
+.plate { position: absolute; left: 8px; right: 8px; bottom: 6px; transform: translateZ(calc(var(--h) + .5px)); font: 500 10.5px/1 var(--mono); color: #4A2F18; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.monitor { --top: #2B2F2C; --face: #3A403C; --side: #2B2F2C; }
+
+/* Élèves : sprites toujours face à la caméra */
+.kid { position: absolute; width: 0; height: 0; transform-style: preserve-3d; }
+.kid .bb { position: absolute; left: -40px; bottom: 0; width: 80px; transform-origin: bottom center; display: grid; justify-items: center;
+  transform: translateZ(var(--z, 24px)) rotateZ(calc(var(--rz) * -1)) rotateX(calc(var(--rx) * -1)); }
+.kid svg { width: 60px; height: auto; display: block; shape-rendering: crispEdges; }
+.kid.prof svg { width: 76px; }
+.kid button { all: unset; cursor: pointer; display: grid; justify-items: center; position: relative; border-radius: 6px; }
+.kid button:focus-visible { outline: 2px solid #FFF6D8; outline-offset: 3px; }
+.zzz { position: absolute; top: -8px; right: -2px; font: 700 13px/1 var(--mono); color: #F4F1E8; text-shadow: 0 1px 0 rgb(30 43 37 / .9); pointer-events: none; }
+.zzz span { position: absolute; opacity: 0; animation: z 3.2s var(--ease) infinite; }
+.zzz span:nth-child(2) { animation-delay: 1.07s; font-size: 11px; }
+.zzz span:nth-child(3) { animation-delay: 2.13s; font-size: 9px; }
+@keyframes z { 0% { opacity: 0; transform: translate(0, 6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(16px, -24px); } }
+.sleep svg { animation: breathe 3.2s ease-in-out infinite; transform-origin: bottom; }
+@keyframes breathe { 50% { transform: scaleY(.955); } }
+.awake svg { animation: bob .6s steps(2) infinite; }
+@keyframes bob { 50% { transform: translateY(-2px); } }
+.awake .eye { animation: blink 3.6s steps(1) infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes blink { 0%, 94% { transform: scaleY(1); } 95%, 100% { transform: scaleY(.2); } }
+.bubble { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #FFFDF6; color: #1E2B25; border: 2px solid #1E2B25; border-radius: 6px; padding: 2px 7px; font: 500 11px/1.35 var(--mono); white-space: nowrap; box-shadow: 0 2px 0 #1E2B25; }
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -6px; width: 8px; height: 8px; background: inherit; border: 2px solid #1E2B25; border-top: 0; border-left: 0; transform: translateX(-50%) rotate(45deg); }
+.bubble.loop { background: #FFE8D6; }
+
+/* Contrôles de vue et barre d'état, en bas */
+.hud { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; pointer-events: none; }
+.hud > * { pointer-events: auto; }
+.status { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); font-size: 13px; }
+.status strong { font-weight: 600; }
+.status .long { color: var(--muted); }
+.ctrl { display: flex; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); }
+
+/* ---------- Galerie des classes ---------- */
+.gallery { position: absolute; inset: 0; overflow: auto; padding: 32px clamp(16px, 4vw, 48px) 48px; }
+.gallery header { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 20px; }
+.gallery h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.015em; text-wrap: balance; }
+.gallery header p { margin: 0; color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.card { position: relative; display: grid; min-width: 0; grid-template-rows: auto 1fr auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); overflow: hidden; text-align: left; padding: 0; cursor: pointer; transition: border-color 150ms, transform 200ms var(--ease), box-shadow 200ms var(--ease); }
+.card:hover { border-color: var(--line-strong); transform: translateY(-2px); box-shadow: 0 10px 24px rgb(0 0 0 / .08); }
+.card-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.card-head strong { font-size: 15px; }
+.card-head .proj { color: var(--muted); font: 400 12.5px var(--mono); }
+.card-head .dot { margin-left: auto; }
+.thumb-room { position: relative; aspect-ratio: 4 / 3; background: var(--bg-2); overflow: hidden; contain: paint; }
+.plan { position: absolute; inset: 10px; background: var(--floor); border: 5px solid var(--trim); border-top: 0; display: grid; grid-template-rows: 22% auto 1fr; }
+.plan .pb { background: var(--wall); display: grid; place-items: center; }
+.plan .pb i { width: 62%; height: 64%; background: #2B4339; border: 3px solid #A87A4C; }
+.plan .pt { justify-self: center; margin: 6px 0 2px; display: grid; justify-items: center; }
+.plan .seats { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 4px 10px; padding: 4px 14px 10px; }
+.plan .seat { width: 19%; display: grid; justify-items: center; align-content: end; min-height: 30px; }
+.plan svg { width: 22px; height: auto; display: block; }
+.plan .pt svg { width: 28px; }
+.plan .desk { width: 100%; height: 9px; background: var(--wood-top); border-bottom: 3px solid var(--wood-face); margin-top: -2px; }
+.plan .awake .desk { box-shadow: 0 0 0 2px var(--live); }
+.card-foot { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 13px; color: var(--muted); }
+.card-foot strong { color: var(--text); font-weight: 600; }
+.card.add { border-style: dashed; background: transparent; cursor: default; grid-template-rows: 1fr; min-height: 300px; place-items: center; overflow: visible; }
+.card.add:hover { transform: none; box-shadow: none; }
+.add-inner { display: grid; justify-items: center; gap: 14px; text-align: center; padding: 24px; }
+.add-plus { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--bg-2); border: 1px solid var(--line); }
+.add-inner p { margin: 0; color: var(--muted); max-width: 30ch; text-wrap: pretty; }
+.add-inner .menu { left: 50%; transform: translateX(-50%); animation: none; }
+.scan { display: flex; align-items: center; gap: 8px; }
+.spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-strong); border-top-color: var(--text); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+::view-transition-group(*) { animation-duration: 450ms; animation-timing-function: cubic-bezier(.2,.7,.2,1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .room, .fit, .seg .thumb, .wall { transition: none; }
+  .packet, .zzz span, .sleep svg, .awake svg, .awake .eye, .spin, .menu { animation: none; }
+  .zzz span { opacity: 1; position: static; }
+  ::view-transition-group(*) { animation: none; }
+}
+@media (max-width: 767px) {
+  .brand span, .sep, .crumb .btn small, .stream span { display: none; }
+  .hud .status .long { display: none; }
+  .seg button { min-width: 44px; }
+}
+</style>
+</head>
+<body>
+<header class="top" id="top"></header>
+<main class="view" id="view"></main>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+const LOGO = '<svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="20" fill="#2F4A3F"/><rect x="32" y="14" width="56" height="16" rx="3" fill="#F2F0E9"/><circle cx="60" cy="38" r="4" fill="#E5484D"/><rect x="22" y="46" width="20" height="20" rx="4" fill="#30A46C"/><rect x="51" y="47" width="18" height="18" rx="3" fill="none" stroke="#F2F0E9" stroke-width="2"/><rect x="78" y="46" width="20" height="20" rx="4" fill="#30A46C"/><rect x="23" y="79" width="18" height="18" rx="3" fill="none" stroke="#F2F0E9" stroke-width="2"/><rect x="50" y="78" width="20" height="20" rx="4" fill="#30A46C"/><rect x="79" y="79" width="18" height="18" rx="3" fill="none" stroke="#F2F0E9" stroke-width="2"/></svg>';
+
+// Textes FR / EN
+const L = {
+  fr: {
+    active: (n) => `${n} actif${n > 1 ? 's' : ''}`, of: (n) => `sur ${n} agents · en direct`, allClasses: 'Toutes les classes', projectsFor: (a) => `Projets vus pour ${a}`,
+    noProject: 'Aucun projet vu pour l\'instant', addClass: 'Ajouter une classe', top: 'Dessus', light: 'Mode clair', dark: 'Mode sombre', theme: 'Thème', lang: 'Langue', viewL: 'Vue',
+    rotL: 'Tourner à gauche', rotR: 'Tourner à droite', reset: 'Vue par défaut', prof: 'prof', idle: 'au repos', working: 'actif', main: 'agent principal',
+    yours: 'Tes classes', sub: (n) => `${n} classes · une par IA et par projet`, addText: 'Ajoute une classe pour une autre IA, ou pour un autre projet de la même IA.',
+    pick: 'Choisir une IA', allAis: 'Toutes les IA', agents: (n) => `${n} agents`, noPlugin: 'sans plugin', scanning: 'Recherche des agents…', allIdle: 'tous au repos',
+    open: (a, p) => `Ouvrir la classe ${a}, projet ${p}`, liveTxt: (a, p, n) => `${a}, projet ${p} : ${n} agents actifs.`,
+    stream: 'Stream', streamTip: 'Mode stream : masque les chemins de fichiers et le nom des projets, pour filmer ou partager ton écran', streamOn: 'Mode stream : chemins et projets masqués',
+    waiting: 'Plugin pas encore branché : la classe se remplira dès qu\'il le sera', empty: 'Place libre', projAlias: 'Projet', connect: 'Simuler le branchement (maquette)',
+  },
+  en: {
+    active: (n) => `${n} active`, of: (n) => `of ${n} agents · live`, allClasses: 'All classes', projectsFor: (a) => `Projects seen for ${a}`,
+    noProject: 'No project seen yet', addClass: 'Add a class', top: 'Top', light: 'Light mode', dark: 'Dark mode', theme: 'Theme', lang: 'Language', viewL: 'View',
+    rotL: 'Rotate left', rotR: 'Rotate right', reset: 'Default view', prof: 'teacher', idle: 'idle', working: 'working', main: 'main agent',
+    yours: 'Your classes', sub: (n) => `${n} classes · one per AI and project`, addText: 'Add a class for another AI, or for another project of the same AI.',
+    pick: 'Pick an AI', allAis: 'All AIs', agents: (n) => `${n} agents`, noPlugin: 'no plugin', scanning: 'Looking for agents…', allIdle: 'all idle',
+    open: (a, p) => `Open the ${a} class, project ${p}`, liveTxt: (a, p, n) => `${a}, project ${p}: ${n} active agents.`,
+    stream: 'Stream', streamTip: 'Stream mode: hides file paths and project names, for recording or sharing your screen', streamOn: 'Stream mode: paths and projects hidden',
+    waiting: 'Plugin not connected yet: the class fills up as soon as it is', empty: 'Empty seat', projAlias: 'Project', connect: 'Simulate connection (mockup)',
+  },
+};
+let lang = 'fr';
+try { lang = localStorage.getItem('agentclass-lang') ?? (navigator.language.startsWith('fr') ? 'fr' : 'en'); } catch {}
+document.documentElement.lang = lang;
+const t = (k, ...a) => { const v = L[lang][k]; return typeof v === 'function' ? v(...a) : v; };
+let stream = false;
+// Mode stream : nom de fichier seul, projet remplacé par un alias stable
+const showFile = (f) => (stream ? f.split('/').pop() : f);
+const showProj = (p) => {
+  if (!stream) return p;
+  const all = [...new Set(state.classes.map((c) => c.project))];
+  return `${t('projAlias')} ${String.fromCharCode(65 + Math.max(0, all.indexOf(p)))}`;
+};
+
+const ICON = (n, s = 18) => `<span class="i" style="--u:url(https://api.iconify.design/tabler/${n}.svg);width:${s}px;height:${s}px" aria-hidden="true"></span>`;
+
+// ---------- Sprites pixel art (grilles de caractères rendues en SVG) ----------
+const BODY = [
+  '...BBBBBBBB...', '..BBBBBBBBBB..', '..BBBBBBBBBB..', '..BBEBBBBEBB..', 'BBBBEBBBBEBBBB',
+  'BBBBBBBBBBBBBB', '..BBBBBBBBBB..', '..BBBBBBBBBB..', '..B.B....B.B..', '..B.B....B.B..',
+];
+const HATS = {
+  beanie: ['....HHHHHH....', '...HHHHHHHH...'], cap: ['....HHHHHH....', '...HHHHHHHHHH.'],
+  bow: ['...HH....HH...', '....HHHHHH....'], sprout: ['.....H..H.....', '......HH......'],
+  wizard: ['......HH......', '.....HHHH.....', '....HHHHHH....'], heart: ['.....H.H......', '.....HHH......', '......H.......'],
+  flower: ['......H.......', '.....HWH......', '......H.......'], phones: ['...HHHHHHHH...', '..H........H..'],
+  tuft: ['.......HH.....', '......HH......'],
+};
+function sprite({ hat, hatColor, awake, ai, glasses }) {
+  const pal = AIS[ai];
+  const hatRows = hat ? HATS[hat] : [];
+  const pad = 3 - hatRows.length;
+  const rows = [...Array(pad).fill('..............'), ...hatRows, ...BODY];
+  let r = '';
+  rows.forEach((row, y) => [...row].forEach((c, x) => {
+    if (c === '.') return;
+    if (c === 'E') {
+      if (awake) r += `<rect class="eye" x="${x}" y="${y}" width="1" height="1" fill="${pal.dark}"/>`;
+      else r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${pal.body}"/>` + (rows[y + 1]?.[x] === 'E' ? '' : `<rect x="${x}" y="${y + .45}" width="1" height=".35" fill="${pal.dark}"/>`);
+      return;
+    }
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${c === 'B' ? pal.body : c === 'H' ? hatColor : c === 'W' ? '#FFF6D8' : pal.dark}"/>`;
+  }));
+  // Bande plus sombre en bas du corps : du volume sans flou
+  r += `<rect x="2" y="${pad + hatRows.length + 7}" width="10" height="1" fill="${pal.dark}" opacity=".18"/>`;
+  if (glasses) {
+    const y = pad + hatRows.length + 3;
+    r += `<rect x="3" y="${y - .2}" width="3" height="2.4" fill="none" stroke="#24563A" stroke-width=".4"/><rect x="8" y="${y - .2}" width="3" height="2.4" fill="none" stroke="#24563A" stroke-width=".4"/><rect x="6" y="${y + .6}" width="2" height=".35" fill="#24563A"/>`;
+  }
+  return `<svg viewBox="0 0 14 ${rows.length}" aria-hidden="true">${r}</svg>`;
+}
+
+// ---------- Données de la maquette (le flux du serveur les remplacera) ----------
+const AIS = {
+  claude: { name: 'Claude Code', short: 'Claude', body: '#D9774A', dark: '#3A1F12', detected: false },
+  codex: { name: 'Codex', short: 'Codex', body: '#8FA3B3', dark: '#1D2833', detected: false },
+  gemini: { name: 'Gemini CLI', short: 'Gemini', body: '#6E8FE0', dark: '#16224A', detected: false },
+  cursor: { name: 'Cursor', short: 'Cursor', body: '#9C9C9C', dark: '#222222', detected: false },
+  opencode: { name: 'OpenCode', short: 'OpenCode', body: '#C9B458', dark: '#2E2810', detected: false },
+  aider: { name: 'Aider', short: 'Aider', body: '#7FB069', dark: '#1E2B14', detected: false },
+  copilot: { name: 'GitHub Copilot', short: 'Copilot', body: '#A08BD6', dark: '#241A3D', detected: false },
+};
+const ROSTER = {
+  // Tes 12 vrais agents Claude Code, nommés par server/agents.mjs
+  claude: [["Assistant polyvalent","beanie","#2F6FD6","Assistant polyvalent"],["Explore","sprout","#3E9B4F","Enquêteur"],["Plan","bow","#B04FC8","Chef de projet"],["statusline-setup","cap","#E3A72F","Technicien"],["claude-code-guide","phones","#EDEDED","Guide"],["cavecrew-builder","wizard","#D64545","Développeur"],["cavecrew-investigator","flower","#1E9A8A","Enquêteur"],["cavecrew-reviewer","heart","#E0569A","Relecteur"],["code-reviewer","beanie","#BFC5C9","Relecteur"],["security-auditor","sprout","#2FB4D6","Auditeur sécurité"],["test-engineer","bow","#C83A3A","Testeur"],["web-performance-auditor","cap","#3B5FC8","Optimiseur"]],
+  // Noms génériques (worker-1…) remplacés par le métier déduit de leur description
+  codex: [['Testeur', 'beanie', '#E3A72F', 'Testeur'], ['Écrivain', 'cap', '#2F6FD6', 'Écrivain'], ['Designer', 'bow', '#3E9B4F', 'Designer']],
+  gemini: [['planner', 'wizard', '#E3A72F', 'Chef de projet'], ['coder', 'cap', '#D64545', 'Développeur'], ['tester', 'phones', '#EDEDED', 'Testeur'], ['reader', 'beanie', '#3E9B4F', 'Enquêteur'], ['writer', 'bow', '#B04FC8', 'Écrivain']],
+};
+const PROJECTS = {
+  claude: {
+    boutique: { files: [['src/cart.js', 1], ['src/api/orders.js'], ['src/app.js'], ['test/cart.test.js'], ['package.json']], busy: { Explore: ['Read cart.js ×4', true], 'code-reviewer': ['Grep src/api'], Plan: ['Write plan.md'] } },
+    AgentClass: { files: [['server/server.mjs', 1], ['hooks/hook.mjs'], ['docs/02-TRD.md']], busy: { 'code-reviewer': ['Read server.mjs'] } },
+    'site-vitrine': { files: [['index.html', 1]], busy: {} },
+  },
+  codex: { api: { files: [['api/server.py', 1], ['api/routes.py']], busy: { Testeur: ['shell pytest'] } } },
+  gemini: { 'data-lab': { files: [['notebooks/eda.ipynb', 1]], busy: {} } },
+};
+// Teinte des murs : une par projet, pour distinguer deux classes de la même IA
+const WALLS = ['#2C4A3E', '#2E3E4C', '#4A3242', '#4A4030', '#33424A'];
+const wallOf = (p) => WALLS[[...p].reduce((a, c) => a + c.charCodeAt(0), 0) % WALLS.length];
+
+const ISO = { rx: 56, rz: 38 };
+const state = {
+  classes: [{ id: 1, ai: 'claude', project: '—' }],
+  open: 1, view: { ...ISO }, mode: 'iso', next: 2, scanning: null,
+  connected: new Set(), // IA dont le plugin est branché (le serveur le saura par les événements reçus)
+};
+const cls = (id) => state.classes.find((c) => c.id === id);
+const isOn = (ai) => state.connected.has(ai);
+const busyCount = (c) => (isOn(c.ai) ? Object.keys(PROJECTS[c.ai]?.[c.project]?.busy ?? {}).length : 0);
+const rosterOf = (ai) => (isOn(ai) ? ROSTER[ai] ?? [] : []);
+const projectsOf = (ai) => (isOn(ai) ? Object.keys(PROJECTS[ai] ?? {}) : []);
+
+// ---------- Construction de la salle ----------
+const box = (x, y, w, d, h, extra = '', inner = '') =>
+  `<div class="contact" style="left:${x - 3}px;top:${y + d - 4}px;width:${w + 8}px;height:10px"></div>` +
+  `<div class="box ${extra}" style="left:${x}px;top:${y}px;width:${w}px;height:${d}px;--h:${h}px"><i class="fn"></i><i class="fw"></i><i class="fs"></i><i class="fe"></i><i class="t"></i>${inner}</div>`;
+const kid = (x, y, html, cl = '', z = 24) => `<div class="kid ${cl}" style="left:${x}px;top:${y}px;--z:${z}px"><div class="bb">${html}</div></div>`;
+
+// Place n tables : 4 au plus par rangée, rangées équilibrées et centrées, marges contre les murs.
+// Rend aussi la profondeur de salle nécessaire. ponytail: largeur fixe (4 par rangée) ; élargir la salle au-delà de ~24 agents si besoin.
+const DESK = { w: 120, d: 50, gap: 50, row: 100, top: 250, W: 780 };
+function layout(n) {
+  const rows = Math.max(1, Math.ceil(n / 4));
+  const D = Math.max(640, DESK.top + rows * DESK.row + 70);
+  const area = D - 60 - DESK.top, block = (rows - 1) * DESK.row + DESK.d;
+  const y0 = DESK.top + 18 + Math.max(0, (area - block) / 2);
+  const out = [];
+  for (let r = 0, left = n; r < rows; r++) {
+    const k = Math.ceil(left / (rows - r));
+    left -= k;
+    const x0 = (DESK.W - (k * DESK.w + (k - 1) * DESK.gap)) / 2;
+    for (let j = 0; j < k; j++) out.push({ x: x0 + j * (DESK.w + DESK.gap), y: y0 + r * DESK.row });
+  }
+  return { D, seats: out };
+}
+
+function roomHTML(c) {
+  const ai = c.ai, proj = (isOn(ai) && PROJECTS[ai]?.[c.project]) || { files: [], busy: {} };
+  const files = proj.files.map(([f, hot]) => `<li class="${hot ? 'hot' : ''}">${showFile(f)}</li>`).join('');
+  let h = `<div class="floor"></div>
+  <div class="plinth n"></div><div class="plinth s"></div><div class="plinth e"></div><div class="plinth w"></div>
+  <div class="wall n" data-wall="n"><div class="wall-slot">
+    <div class="board"><svg viewBox="0 0 330 120" aria-hidden="true">
+      <g stroke="#B9C7BF" stroke-width="1.5" stroke-dasharray="4 4" fill="none"><path d="M40 92 C 90 40, 160 40, 210 60"/><path d="M40 92 L 110 100"/><path d="M110 100 L 210 60"/><path d="M210 60 L 290 30"/><path d="M210 60 L 280 100"/><path d="M110 100 L 150 20"/></g>
+      <g fill="#2B4339" stroke="#F2F0E9" stroke-width="2"><circle cx="40" cy="92" r="9"/><circle cx="110" cy="100" r="7"/><circle cx="210" cy="60" r="9"/><circle cx="290" cy="30" r="7"/><circle cx="280" cy="100" r="7"/><circle cx="150" cy="20" r="7"/></g>
+      <text x="40" y="117" fill="#F2F0E9" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">IA</text>
+      <text x="210" y="84" fill="#FFE9A8" font-size="10" font-family="IBM Plex Mono" text-anchor="middle">${proj.files[0]?.[0].split('/').pop() ?? ''}</text>
+      <circle class="packet" r="5" fill="#FF7A7A"/></svg><ul>${files}</ul></div>
+  </div></div>
+  <div class="wall w" data-wall="w"><div class="wall-slot"><div class="window" style="left:120px"><i></i><i></i><i></i><i></i></div><div class="window" style="left:400px"><i></i><i></i><i></i><i></i></div></div></div>
+  <div class="wall e" data-wall="e"><div class="wall-slot"><div class="clock" style="left:290px"></div><div class="shelf" style="left:80px">${['#3E9B4F', '#2F6FD6', '#D64545', '#E3A72F', '#B04FC8', '#1E9A8A', '#E3A72F'].map((col, i) => `<b style="--c:${col};--h:${38 + (i * 7) % 18}px"></b>`).join('')}</div></div></div>
+  <div class="wall s" data-wall="s"><div class="wall-slot"><div class="door" style="left:600px"></div></div></div>
+  <div class="layer">`;
+  // Prof : bureau devant le tableau, petit écran, grand personnage
+  h += box(445, 70, 50, 34, 30, 'chair');
+  const profAwake = busyCount(c) > 0;
+  const profOver = profAwake ? '<span class="bubble">Agent ×2</span>' : '<span class="zzz" aria-hidden="true"><span>Z</span><span>z</span><span>z</span></span>';
+  h += kid(470, 92, `<button aria-label="${AIS[ai].short}, ${t('main')}, ${profAwake ? t('working') : t('idle')}">${sprite({ hat: 'tuft', hatColor: AIS[ai].dark, awake: profAwake, ai, glasses: true })}${profOver}</button>`, `prof ${profAwake ? 'awake' : 'sleep'}`, 30);
+  h += box(370, 112, 200, 62, 46, '', `<span class="plate">${AIS[ai].short} · ${t('prof')}</span>`);
+  h += box(392, 122, 50, 16, 76, 'monitor');
+  // Élèves : une table par agent ; sans agent, 3 places libres
+  const roster = rosterOf(ai);
+  layout(roster.length || 3).seats.forEach(({ x, y }, i) => {
+    h += box(x + 38, y - 30, 44, 28, 20, 'chair');
+    if (!roster[i]) { h += box(x, y, DESK.w, DESK.d, 36, '', `<span class="plate">${t('empty')}</span>`); return; }
+    const [name, hat, color, job] = roster[i];
+    const [task, loop] = proj.busy[name] ?? [];
+    const awake = !!task;
+    const over = awake ? `<span class="bubble ${loop ? 'loop' : ''}">${task}</span>` : `<span class="zzz" aria-hidden="true"><span>Z</span><span>z</span><span>z</span></span>`;
+    h += kid(x + 60, y - 14, `<button aria-label="${name}${job !== name ? ', ' + job : ''}, ${awake ? t('working') + ' : ' + task : t('idle')}" title="${name}${job !== name ? ' · ' + job : ''}">${over}${sprite({ hat, hatColor: color, awake, ai })}</button>`, awake ? 'awake' : 'sleep');
+    h += box(x, y, DESK.w, DESK.d, 36, '', `<span class="plate">${name}</span>`);
+  });
+  return h + '</div>';
+}
+
+// Vignette de la galerie : plan 2D vu de dessus (pas de 3D, rendu léger et net)
+function planHTML(c) {
+  const busy = (isOn(c.ai) && PROJECTS[c.ai]?.[c.project]?.busy) || {};
+  const roster = rosterOf(c.ai);
+  const seats = (roster.length ? roster : [null, null, null]).map((a) => {
+    if (!a) return '<span class="seat"><span class="desk"></span></span>';
+    const [name, hat, color] = a;
+    const awake = !!busy[name];
+    return `<span class="seat ${awake ? 'awake' : ''}">${sprite({ hat, hatColor: color, awake, ai: c.ai })}<span class="desk"></span></span>`;
+  }).join('');
+  return `<div class="plan" style="--wall:${wallOf(c.project)}"><span class="pb"><i></i></span><span class="pt">${sprite({ hat: 'tuft', hatColor: AIS[c.ai].dark, awake: busyCount(c) > 0, ai: c.ai, glasses: true })}<span class="desk" style="width:46px"></span></span><span class="seats">${seats}</span></div>`;
+}
+
+// ---------- Barre du haut ----------
+const bar = document.getElementById('top');
+const view = document.getElementById('view');
+const live = document.getElementById('live');
+
+function themeHTML() {
+  const t = document.documentElement.dataset.theme;
+  return `<div class="seg theme" role="group" aria-label="${L[lang].theme}" data-seg>
+    <span class="thumb" aria-hidden="true"></span>
+    <button data-theme-set="light" aria-pressed="${t === 'light'}" aria-label="${L[lang].light}" title="${L[lang].light}">${ICON('sun', 16)}</button>
+    <button data-theme-set="dark" aria-pressed="${t === 'dark'}" aria-label="${L[lang].dark}" title="${L[lang].dark}">${ICON('moon', 16)}</button>
+  </div>`;
+}
+
+function renderTop() {
+  const c = cls(state.open);
+  const brand = `<span class="brand">${LOGO}<span>AgentClass</span></span>`;
+  const right = `<span class="spacer"></span>
+    ${c ? `<div class="seg" role="group" aria-label="${t('viewL')}" data-seg><span class="thumb" aria-hidden="true"></span>
+      <button data-mode="iso" aria-pressed="${state.mode === 'iso'}">3D</button><button data-mode="top" aria-pressed="${state.mode === 'top'}">${t('top')}</button></div>` : ''}
+    ${themeHTML()}
+    <div class="seg langs" role="group" aria-label="${t('lang')}" data-seg><span class="thumb" aria-hidden="true"></span>
+      <button data-lang="fr" aria-pressed="${lang === 'fr'}" lang="fr">FR</button><button data-lang="en" aria-pressed="${lang === 'en'}" lang="en">EN</button></div>
+    <button class="btn ghost stream" data-stream aria-pressed="${stream}" title="${t('streamTip')}">${ICON(stream ? 'eye-off' : 'eye', 16)}<span>${t('stream')}</span></button>`;
+  if (!c) {
+    bar.innerHTML = brand + right;
+  } else {
+    const projects = projectsOf(c.ai);
+    bar.innerHTML = `${brand}<span class="sep"></span>
+      <nav class="crumb" aria-label="Classe">
+        <button class="btn ghost" data-go="gallery" aria-label="${t('allClasses')}" title="${t('allClasses')}">${ICON('layout-grid')}<small>${state.classes.length}</small></button>
+        <span class="title"><span class="swatch" style="background:${AIS[c.ai].body}22">${sprite({ ai: c.ai, awake: true })}</span>${AIS[c.ai].short}</span>
+        <div class="pop">
+          <button class="btn" data-menu="proj" aria-haspopup="menu" aria-expanded="false">${ICON('folder', 16)}<span class="mono">${showProj(c.project)}</span>${ICON('chevron-down', 14)}</button>
+          <div class="menu" role="menu" hidden><h3>${projects.length ? t('projectsFor', AIS[c.ai].short) : t('noProject')}</h3>
+            ${projects.map((p) => `<button class="item" role="menuitemradio" aria-checked="${p === c.project}" data-proj="${p}"><span class="mono">${showProj(p)}</span>${p === c.project ? `<span class="check">${ICON('check', 16)}</span>` : `<span class="meta">${t('active', busyCount({ ai: c.ai, project: p }))}</span>`}</button>`).join('')}
+          </div>
+        </div>
+      </nav>
+      <button class="btn ghost icon" data-go="add" aria-label="${t('addClass')}" title="${t('addClass')}">${ICON('plus')}</button>
+      ${right}`;
+  }
+  placeThumbs();
+}
+
+// Pastille glissante des boutons segmentés
+function placeThumbs() {
+  bar.querySelectorAll('[data-seg]').forEach((seg) => {
+    const on = seg.querySelector('[aria-pressed="true"]');
+    const th = seg.querySelector('.thumb');
+    if (!on || !th) return;
+    th.style.width = on.offsetWidth + 'px';
+    th.style.transform = `translateX(${on.offsetLeft - 3}px)`;
+  });
+}
+
+// ---------- Vue « classe » ----------
+let roomEl, fitEl;
+function renderClass() {
+  const c = cls(state.open);
+  view.innerHTML = `<div class="stage" id="stage" style="view-transition-name:room-${c.id}">
+      <div class="fit" id="fit"><div class="room" id="room" style="--wall:${wallOf(c.project)};--D:${layout(rosterOf(c.ai).length || 3).D}px">${roomHTML(c)}</div></div>
+    </div>
+    <div class="hud">
+      <div class="left">
+        <div class="status">${isOn(c.ai)
+          ? `<span class="dot ${busyCount(c) ? '' : 'idle'}"></span><strong>${t('active', busyCount(c))}</strong><span class="long">${t('of', rosterOf(c.ai).length)}</span>`
+          : `<span class="dot idle"></span><span class="empty-note">${t('waiting')}</span><button class="btn" data-connect="${c.ai}">${t('connect')}</button>`}</div>
+        ${stream ? `<div class="stream-flag">${ICON('eye-off', 16)}${t('streamOn')}</div>` : ''}
+      </div>
+      <div class="ctrl" role="group" aria-label="Rotation">
+        <button class="btn ghost icon" data-rot="-45" aria-label="${t('rotL')}" title="${t('rotL')}">${ICON('rotate-2')}</button>
+        <button class="btn ghost icon" data-rot="reset" aria-label="${t('reset')}" title="${t('reset')}">${ICON('focus-centered')}</button>
+        <button class="btn ghost icon" data-rot="45" aria-label="${t('rotR')}" title="${t('rotR')}">${ICON('rotate-clockwise-2')}</button>
+      </div>
+    </div>`;
+  roomEl = document.getElementById('room');
+  fitEl = document.getElementById('fit');
+  bindDrag(document.getElementById('stage'));
+  resize();
+  apply();
+  live.textContent = t('liveTxt', AIS[c.ai].short, showProj(c.project), busyCount(c));
+}
+function resize() {
+  if (fitEl) fitEl.style.setProperty('--fit', Math.min(view.clientWidth / 1250, view.clientHeight / 1000, 1.15).toFixed(3));
+}
+new ResizeObserver(resize).observe(view);
+
+function syncMode() {
+  bar.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
+  placeThumbs();
+}
+function apply() {
+  if (!roomEl) return;
+  const { rx, rz } = state.view;
+  const k = Math.min(1, rx / 35);
+  roomEl.style.setProperty('--rx', rx + 'deg');
+  roomEl.style.setProperty('--rz', rz + 'deg');
+  roomEl.style.setProperty('--fold', (-90 * k).toFixed(1) + 'deg');
+  fitEl.style.setProperty('--shift', ((1 - k) * 105).toFixed(0) + 'px');
+  // Murs tournés vers la caméra : abaissés pour voir dedans, comme une maquette
+  const a = rz * Math.PI / 180, fx = Math.sin(a), fy = Math.cos(a);
+  const out = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
+  roomEl.querySelectorAll('.wall').forEach((w) => {
+    const [nx, ny] = out[w.dataset.wall];
+    w.classList.toggle('cut', rx < 10 ? w.dataset.wall !== 'n' : nx * fx + ny * fy > 0.25);
+  });
+}
+function setMode(m) {
+  state.mode = m;
+  const near = (target) => target + Math.round((state.view.rz - target) / 360) * 360;
+  state.view = m === 'top' ? { rx: 0, rz: near(0) } : { rx: ISO.rx, rz: near(ISO.rz) };
+  syncMode();
+  apply();
+}
+function bindDrag(stage) {
+  let d = null;
+  stage.addEventListener('pointerdown', (e) => { if (e.button !== 0 || e.target.closest('button')) return; d = { x: e.clientX, y: e.clientY, ...state.view }; stage.classList.add('dragging'); stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener('pointermove', (e) => {
+    if (!d) return;
+    state.view.rz = d.rz + (e.clientX - d.x) * 0.3;
+    state.view.rx = Math.max(0, Math.min(68, d.rx - (e.clientY - d.y) * 0.2));
+    const m = state.view.rx < 5 ? 'top' : 'iso';
+    if (m !== state.mode) { state.mode = m; syncMode(); }
+    apply();
+  });
+  const end = () => { d = null; stage.classList.remove('dragging'); };
+  stage.addEventListener('pointerup', end);
+  stage.addEventListener('pointercancel', end);
+}
+
+// ---------- Vue « galerie » ----------
+function renderGallery(focusAdd) {
+  const cards = state.classes.map((c) => {
+    const n = busyCount(c);
+    const foot = state.scanning === c.id ? `<span class="scan"><span class="spin"></span>${t('scanning')}</span>`
+      : !isOn(c.ai) ? t('noPlugin')
+      : `${t('agents', rosterOf(c.ai).length)} · ${n ? `<strong>${t('active', n)}</strong>` : t('allIdle')}`;
+    return `<button class="card" data-open="${c.id}" aria-label="${t('open', AIS[c.ai].short, showProj(c.project))}">
+      <div class="card-head"><span class="swatch" style="background:${AIS[c.ai].body}22">${sprite({ ai: c.ai, awake: true })}</span><strong>${AIS[c.ai].short}</strong><span class="proj">${showProj(c.project)}</span><span class="dot ${n ? '' : 'idle'}"></span></div>
+      <div class="thumb-room" style="view-transition-name:room-${c.id}">${planHTML(c)}</div>
+      <div class="card-foot">${foot}</div>
+    </button>`;
+  }).join('');
+  view.innerHTML = `<section class="gallery">
+    <header><h1>${t('yours')}</h1><p>${t('sub', state.classes.length)}</p></header>
+    <div class="grid">${cards}
+      <div class="card add"><div class="add-inner">
+        <span class="add-plus">${ICON('plus', 24)}</span>
+        <p>${t('addText')}</p>
+        <div class="pop">
+          <button class="btn" data-menu="ai" aria-haspopup="menu" aria-expanded="false" id="pick-ai">${t('pick')} ${ICON('chevron-down', 14)}</button>
+          <div class="menu" role="menu" hidden><h3>${t('allAis')}</h3>
+            ${Object.entries(AIS).map(([k, a]) => `<button class="item" role="menuitem" data-add="${k}"><span class="swatch" style="background:${a.body}22">${sprite({ ai: k, awake: true })}</span>${a.name}<span class="meta">${isOn(k) ? t('agents', rosterOf(k).length) : t('noPlugin')}</span></button>`).join('')}
+          </div>
+        </div>
+      </div></div>
+    </div></section>`;
+  roomEl = fitEl = null;
+  resize();
+  if (focusAdd) document.getElementById('pick-ai').focus();
+}
+
+// ---------- Navigation : la salle se réduit en vignette (View Transitions) ----------
+function go(fn) {
+  if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(fn);
+  else fn();
+}
+function rerender() { renderTop(); state.open ? renderClass() : renderGallery(false); }
+function openClass(id) { state.open = id; renderTop(); renderClass(); }
+function openGallery(focusAdd) { state.open = null; renderTop(); renderGallery(focusAdd); }
+const closeMenus = (except) => document.querySelectorAll('.menu:not([hidden])').forEach((m) => {
+  if (m === except) return;
+  m.hidden = true;
+  m.previousElementSibling?.setAttribute('aria-expanded', 'false');
+});
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button');
+  const menuBtn = t?.dataset.menu ? t.parentElement.querySelector('.menu') : null;
+  if (!e.target.closest('.menu')) closeMenus(menuBtn);
+  if (!t) return;
+  if (t.dataset.themeSet) return setTheme(t.dataset.themeSet, true);
+  if (t.dataset.lang) {
+    lang = t.dataset.lang;
+    document.documentElement.lang = lang;
+    try { localStorage.setItem('agentclass-lang', lang); } catch {}
+    return rerender();
+  }
+  if (t.hasAttribute('data-stream')) { stream = !stream; return rerender(); }
+  if (t.dataset.connect) {
+    // Maquette seulement : en vrai, la classe se remplit au premier événement reçu du plugin
+    const ai = t.dataset.connect;
+    state.connected.add(ai);
+    for (const c of state.classes) if (c.ai === ai && c.project === '—') c.project = projectsOf(ai)[0] ?? '—';
+    return go(() => rerender());
+  }
+  if (t.dataset.mode) return setMode(t.dataset.mode);
+  if (t.dataset.go === 'gallery') return go(() => openGallery(false));
+  if (t.dataset.go === 'add') return go(() => openGallery(true));
+  if (t.dataset.open) return go(() => openClass(Number(t.dataset.open)));
+  if (t.dataset.rot) {
+    if (t.dataset.rot === 'reset') return setMode('iso');
+    if (state.view.rx < 10) state.view.rx = ISO.rx;
+    state.mode = 'iso';
+    state.view.rz += Number(t.dataset.rot);
+    syncMode();
+    return apply();
+  }
+  if (menuBtn) {
+    menuBtn.hidden = !menuBtn.hidden;
+    t.setAttribute('aria-expanded', String(!menuBtn.hidden));
+    if (!menuBtn.hidden) menuBtn.querySelector('.item:not([disabled])')?.focus();
+    return;
+  }
+  if (t.dataset.proj) {
+    cls(state.open).project = t.dataset.proj;
+    return go(() => { renderTop(); renderClass(); });
+  }
+  if (t.dataset.add) {
+    const ai = t.dataset.add, id = state.next++;
+    state.classes.push({ id, ai, project: projectsOf(ai)[0] ?? '—' });
+    state.scanning = id;
+    go(() => renderGallery(false));
+    // Simulation : le serveur lit les définitions d'agents de l'IA
+    setTimeout(() => { state.scanning = null; if (state.open === null) renderGallery(false); }, 1200);
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const open = document.querySelector('.menu:not([hidden])');
+  closeMenus();
+  open?.previousElementSibling?.focus();
+});
+
+// ---------- Thème ----------
+function setTheme(t, save) {
+  document.documentElement.dataset.theme = t;
+  bar.querySelectorAll('[data-theme-set]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeSet === t)));
+  placeThumbs();
+  if (save) try { localStorage.setItem('agentclass-theme', t); } catch {}
+}
+let saved = null;
+try { saved = localStorage.getItem('agentclass-theme'); } catch {}
+document.documentElement.dataset.theme = saved ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+if (matchMedia('(max-width: 767px)').matches) { state.mode = 'top'; state.view = { rx: 0, rz: 0 }; }
+document.fonts.ready.then(placeThumbs);
+openClass(1);
+</script>
+</body>
+</html>
