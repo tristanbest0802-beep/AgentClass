@@ -11,19 +11,20 @@ export const home = () => process.env.AGENTCLASS_HOME || join(homedir(), '.agent
 /**
  * Lit config.json, le crée (jeton aléatoire, droits utilisateur seulement) s'il manque.
  * @param {string} [dir] @param {{ reset?: boolean }} [opts]
- * @returns {{ token: string, port: number }}
+ * `announce` (défaut vrai) : Claude donne le lien en tête de sa première réponse ; false pour 0 token strict.
+ * @returns {{ token: string, port: number, announce: boolean }}
  */
 export function config(dir = home(), { reset = false } = {}) {
   const file = join(dir, 'config.json');
   if (!reset) {
     try {
       const c = JSON.parse(readFileSync(file, 'utf8'));
-      if (typeof c.token === 'string' && c.token.length >= 32) return { token: c.token, port: Number(c.port) || DEFAULT_PORT };
+      if (typeof c.token === 'string' && c.token.length >= 32) return { token: c.token, port: Number(c.port) || DEFAULT_PORT, announce: c.announce !== false };
     } catch {
       // Absent ou illisible : on le recrée.
     }
   }
-  const c = { token: randomBytes(32).toString('base64url'), port: Number(process.env.AGENTCLASS_PORT) || DEFAULT_PORT };
+  const c = { token: randomBytes(32).toString('base64url'), port: Number(process.env.AGENTCLASS_PORT) || DEFAULT_PORT, announce: true };
   mkdirSync(dir, { recursive: true });
   writeFileSync(file, JSON.stringify(c), { mode: 0o600 });
   return c;

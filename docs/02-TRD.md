@@ -30,7 +30,8 @@ flowchart LR
 ```
 
 Règles :
-- `hook.mjs` ne fait qu'une chose : lire stdin, réduire le contenu, ajouter une ligne, sortir en 0. Il n'écrit jamais de texte brut sur stdout ni d'`additionalContext`, parce que ce texte serait injecté dans le contexte et coûterait des tokens. Seule exception, au SessionStart : il lance le serveur s'il ne tourne pas (processus détaché) et écrit un JSON `{ systemMessage }` avec le lien de la salle, affiché à l'utilisateur et jamais envoyé au modèle (`claude plugin details` confirme ~0 token). Toute erreur est avalée.
+- `hook.mjs` ne fait qu'une chose : lire stdin, réduire le contenu, ajouter une ligne, sortir en 0. Il n'écrit jamais de texte brut sur stdout ni d'`additionalContext`, parce que ce texte serait injecté dans le contexte et coûterait des tokens. Seule exception, au SessionStart : il lance le serveur s'il ne tourne pas (processus détaché, `server/launch.mjs`), écrit le lien en `systemMessage` (montré à l'utilisateur, 0 token) et, pour une nouvelle conversation (`source` startup ou clear), ajoute un `additionalContext` d'une phrase pour que Claude donne le lien en tête de sa première réponse : environ 50 tokens par session, décision de l'utilisateur du 2026-10-20. Coupable par `"announce": false` dans `config.json` ou `AGENTCLASS_QUIET=1`. Toute erreur est avalée.
+- Lancement sans IA : `start.bat`, `stop.bat`, `demo.bat` à la racine (Windows), ou `agentclass open|stop|demo --open`.
 - Installation locale : `.claude-plugin/marketplace.json` à la racine du dépôt. `claude plugin marketplace add <dossier>` puis `claude plugin install agentclass@agentclass`. Après une modification : monter la version, puis `npm run plugin:update`.
 - Chaque source a son lecteur, isolé, qui produit le format commun (voir 05-SCHEMA).
 - Le serveur suit les fichiers (`fs.watch` plus lecture depuis le dernier offset) et diffuse en SSE.

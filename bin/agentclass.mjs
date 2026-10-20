@@ -2,6 +2,7 @@
 // CLI : agentclass [start|demo|stop]
 import { clearState, home, running, serve, writeState } from '../server/server.mjs';
 import { config } from '../server/config.mjs';
+import { ensureServer, openBrowser } from '../server/launch.mjs';
 
 const cmd = process.argv[2] ?? 'start';
 const dir = home();
@@ -20,7 +21,9 @@ if (cmd === 'stop') {
 } else if (cmd === 'demo') {
   // La démo n'utilise pas server.json : elle peut tourner à côté du vrai serveur.
   const srv = await serve({ demo: true, port: port + 10 });
-  console.log(`AgentClass (démo) : ${srv.url}`);
+  console.log(`AgentClass (démo) : ${srv.url}
+Ferme cette fenêtre pour arrêter la démo.`);
+  if (process.argv.includes('--open')) openBrowser(srv.url);
 } else if (cmd === 'start') {
   const s = running(dir);
   if (s) {
@@ -48,10 +51,15 @@ if (cmd === 'stop') {
       console.log(`AgentClass : ${srv.url}`);
     }
   }
+} else if (cmd === 'open') {
+  // Lance le serveur en arrière-plan s'il ne tourne pas, puis ouvre la salle.
+  const { url, started } = await ensureServer(dir, { wait: 4000 });
+  console.log(`${started ? 'Serveur lancé' : 'Serveur déjà lancé'} : ${url}`);
+  openBrowser(url);
 } else if (cmd === 'reset-token') {
   config(dir, { reset: true });
   console.log('Nouveau lien créé. Relance le serveur : agentclass stop puis agentclass start.');
 } else {
-  console.log('Usage : agentclass [start|demo|stop|reset-token]');
+  console.log('Usage : agentclass [open|start|demo|stop|reset-token]');
   process.exitCode = 1;
 }

@@ -209,30 +209,13 @@ Pas encore disponible.
 ```bash
 git clone https://github.com/tristanbest0802-beep/AgentClass.git
 cd AgentClass
-npm test
+claude plugin marketplace add .
+claude plugin install agentclass@agentclass
 ```
 
 AgentClass n'a **aucune dépendance** à installer : pas de `npm install`
-nécessaire.
-
-Pour essayer le hook sur ce dépôt seulement, crée
-`.claude/settings.local.json` (le fichier est ignoré par Git) :
-
-```json
-{
-  "hooks": {
-    "SessionStart":  [{ "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/hooks/hook.mjs\"" }] }],
-    "SubagentStart": [{ "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/hooks/hook.mjs\"" }] }],
-    "SubagentStop":  [{ "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/hooks/hook.mjs\"" }] }],
-    "PreToolUse":    [{ "matcher": "*", "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/hooks/hook.mjs\"" }] }],
-    "PostToolUse":   [{ "matcher": "*", "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/hooks/hook.mjs\"" }] }]
-  }
-}
-```
-
-Pour l'activer sur tous tes projets, tu peux charger le dossier comme plugin :
-le manifeste est dans `.claude-plugin/plugin.json` et les hooks dans
-`hooks/hooks.json`.
+nécessaire. Après une modification du code : monte la version dans
+`.claude-plugin/plugin.json`, puis `npm run plugin:update`.
 
 ### Option C : npm pour Codex (lot 8)
 
@@ -242,29 +225,25 @@ Pas encore disponible.
 
 ## Premier démarrage
 
-### 1. Ouvrir une nouvelle session
+### Avec Claude Code
 
-Claude Code charge les hooks au démarrage d'une session. Ouvre donc une
-**nouvelle** session dans un projet où les hooks sont actifs.
+Ouvre une **nouvelle** session. Le plugin lance le serveur en arrière-plan,
+et Claude te donne le lien de la salle en tête de sa première réponse. Le
+lien est toujours le même : garde-le en favori.
 
-### 2. Faire travailler l'IA
+Cette annonce coûte environ 50 tokens par session. Pour la couper (0 token
+strict), mets `"announce": false` dans `~/.agentclass/config.json`, ou
+définis `AGENTCLASS_QUIET=1`. Le lien reste affiché en message système.
 
-Demande une tâche qui lit quelques fichiers et lance au moins un sous-agent.
+### Sans IA, en double-cliquant (Windows)
 
-### 3. Vérifier la capture
+| Fichier | Rôle |
+|---|---|
+| `start.bat` | Lance le serveur en arrière-plan et ouvre la salle |
+| `stop.bat` | Arrête le serveur |
+| `demo.bat` | Salle de démonstration avec de faux agents ; ferme la fenêtre pour l'arrêter |
 
-```bash
-tail -n 5 ~/.agentclass/events/claude-*.jsonl
-```
-
-Chaque ligne est un événement. Exemple :
-
-```json
-{"v":1,"ts":"2026-10-20T10:00:00.000Z","source":"claude","session":"…","agent":"main","kind":"tool_call","project":"…","call":"toolu_…","tool":"Read","target":"src/app.js"}
-```
-
-À partir du lot 1, une commande ouvrira directement la salle dans ton
-navigateur.
+Même chose en ligne de commande : `node bin/agentclass.mjs open`, `stop`, `demo --open`.
 
 ---
 

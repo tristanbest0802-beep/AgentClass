@@ -78,16 +78,35 @@ test('processus : entrée invalide, sortie 0, rien sur stdout ni stderr', () => 
   assert.equal(r.stderr.length, 0);
 });
 
-test('SessionStart : seule sortie = { systemMessage } avec le lien, rien pour le modèle', () => {
+/** Lance le hook avec un serveur « vivant » simulé (PID du test) : rien n'est démarré. */
+function sessionStart(input, config) {
   const home = mkdtempSync(join(tmpdir(), 'agentclass-'));
-  // Serveur « vivant » simulé : le PID du test, pour ne rien lancer.
   writeFileSync(join(home, 'server.json'), JSON.stringify({ pid: process.pid, url: 'http://127.0.0.1:47100/?t=x' }));
-  const r = spawnSync(process.execPath, [HOOK], { input: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 's' }), env: { ...process.env, AGENTCLASS_HOME: home } });
+  if (config) writeFileSync(join(home, 'config.json'), JSON.stringify(config));
+  const env = { ...process.env, AGENTCLASS_HOME: home };
+  delete env.AGENTCLASS_QUIET;
+  const r = spawnSync(process.execPath, [HOOK], { input: JSON.stringify({ hook_event_name: 'SessionStart', session_id: 's', ...input }), env });
   assert.equal(r.status, 0);
   assert.equal(r.stderr.length, 0);
-  const out = JSON.parse(r.stdout.toString());
-  assert.deepEqual(Object.keys(out), ['systemMessage']);
+  return JSON.parse(r.stdout.toString());
+}
+
+test('SessionStart, nouvelle session : lien pour l\'utilisateur et consigne d\'une phrase pour Claude', () => {
+  const out = sessionStart({ source: 'startup' });
   assert.match(out.systemMessage, /http:\/\/127\.0\.0\.1:47100\/\?t=x/);
+  const ctx = out.hookSpecificOutput.additionalContext;
+  assert.equal(out.hookSpecificOutput.hookEventName, 'SessionStart');
+  assert.match(ctx, /première réponse[\s\S]*http:\/\/127\.0\.0\.1:47100\/\?t=x/);
+  assert.ok(ctx.length < 300, 'consigne courte : peu de tokens');
+});
+
+test('SessionStart, reprise ou compactage : lien seulement, rien pour le modèle', () => {
+  for (const source of ['resume', 'compact']) assert.deepEqual(Object.keys(sessionStart({ source })), ['systemMessage']);
+});
+
+test('SessionStart, annonce coupée dans config.json : 0 token', () => {
+  const out = sessionStart({ source: 'startup' }, { token: 'x'.repeat(43), port: 47100, announce: false });
+  assert.deepEqual(Object.keys(out), ['systemMessage']);
 });
 
 test('PreToolUse : toujours rien sur stdout', () => {
