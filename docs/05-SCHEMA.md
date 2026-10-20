@@ -37,7 +37,12 @@ Jamais stockés : le texte des prompts, le contenu des fichiers, la sortie des o
 | id | string | clé | Nom de l'agent (`subagent_type` ou nom du fichier) |
 | label | string | | Nom affiché |
 | description | string | 160 caractères au plus | Tiré du front matter de l'agent |
-| origin | `"user"` \| `"plugin"` \| `"seen"` | | `~/.claude/agents`, agent d'un plugin, ou vu seulement dans les événements |
+| origin | `"builtin"` \| `"user"` \| `"project"` \| `"plugin"` \| `"seen"` | | Agent intégré à Claude Code, `~/.claude/agents`, `.claude/agents` du projet, plugin activé, ou vu seulement dans les événements |
+| job | { fr, en } | | Métier déduit du nom puis de la description, par mots-clés (`server/agents.mjs`), sans appel d'IA |
+
+Nom affiché : le `name` du front matter, sinon le nom du fichier. S'il est générique (`worker-1`, `general-purpose`…), le métier le remplace (Designer, Écrivain, Monteur vidéo…).
+
+Une classe reste à 3 places vides tant qu'aucun événement n'est arrivé du plugin pour cette IA ; elle se remplit alors avec les agents connus.
 
 ### Session (en mémoire)
 | Champ | Type | Description |
