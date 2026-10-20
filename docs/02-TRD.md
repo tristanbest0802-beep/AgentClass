@@ -30,7 +30,8 @@ flowchart LR
 ```
 
 Règles :
-- `hook.mjs` ne fait qu'une chose : lire stdin, réduire le contenu, ajouter une ligne, sortir en 0. Il n'écrit jamais sur stdout, parce que ce texte pourrait être injecté dans le contexte et coûter des tokens. Toute erreur est avalée.
+- `hook.mjs` ne fait qu'une chose : lire stdin, réduire le contenu, ajouter une ligne, sortir en 0. Il n'écrit jamais de texte brut sur stdout ni d'`additionalContext`, parce que ce texte serait injecté dans le contexte et coûterait des tokens. Seule exception, au SessionStart : il lance le serveur s'il ne tourne pas (processus détaché) et écrit un JSON `{ systemMessage }` avec le lien de la salle, affiché à l'utilisateur et jamais envoyé au modèle (`claude plugin details` confirme ~0 token). Toute erreur est avalée.
+- Installation locale : `.claude-plugin/marketplace.json` à la racine du dépôt. `claude plugin marketplace add <dossier>` puis `claude plugin install agentclass@agentclass`. Après une modification : monter la version, puis `npm run plugin:update`.
 - Chaque source a son lecteur, isolé, qui produit le format commun (voir 05-SCHEMA).
 - Le serveur suit les fichiers (`fs.watch` plus lecture depuis le dernier offset) et diffuse en SSE.
 
