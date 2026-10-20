@@ -1,6 +1,9 @@
 {
   "name": "agentclass",
-  "owner": { "name": "tristanbest0802-beep" },
+  "owner": {
+    "name": "tristanbest0802-beep"
+  },
+  "description": "AgentClass : la salle de classe de tes agents IA, en local.",
   "plugins": [
     {
       "name": "agentclass",

@@ -13,7 +13,8 @@
     "demo": "node bin/agentclass.mjs demo",
     "stop": "node bin/agentclass.mjs stop",
     "test": "node --test",
-    "bench:hook": "node scripts/bench-hook.mjs"
+    "bench:hook": "node scripts/bench-hook.mjs",
+    "plugin:update": "claude plugin marketplace update agentclass && claude plugin update agentclass@agentclass"
   },
   "bin": {
     "agentclass": "bin/agentclass.mjs"
