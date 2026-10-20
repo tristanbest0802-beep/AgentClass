@@ -47,26 +47,27 @@ quels fichiers l'IA va chercher. Pour Claude Code d'abord, Codex ensuite.
 
 1. [Présentation](#présentation)
 2. [Fonctionnalités](#fonctionnalités)
-3. [Prérequis](#prérequis)
-4. [Installation](#installation)
-5. [Premier démarrage](#premier-démarrage)
-6. [Guide d'utilisation](#guide-dutilisation)
+3. [Compatibilité IA](#compatibilité-ia)
+4. [Prérequis](#prérequis)
+5. [Installation](#installation)
+6. [Premier démarrage](#premier-démarrage)
+7. [Guide d'utilisation](#guide-dutilisation)
    - [La salle de classe](#la-salle-de-classe)
    - [Le bureau du prof](#le-bureau-du-prof)
    - [Le tableau](#le-tableau)
    - [Sessions et onglets](#sessions-et-onglets)
    - [Mode stream](#mode-stream)
    - [Réglages](#réglages)
-7. [Configuration avancée](#configuration-avancée)
-8. [Données, sécurité et confidentialité](#données-sécurité-et-confidentialité)
-9. [Performances](#performances)
-10. [Dépannage](#dépannage)
-11. [Développement](#développement)
-12. [Architecture](#architecture)
-13. [Feuille de route](#feuille-de-route)
-14. [Traductions](#traductions)
-15. [Limites connues](#limites-connues)
-16. [Licence et marques](#licence-et-marques)
+8. [Configuration avancée](#configuration-avancée)
+9. [Données, sécurité et confidentialité](#données-sécurité-et-confidentialité)
+10. [Performances](#performances)
+11. [Dépannage](#dépannage)
+12. [Développement](#développement)
+13. [Architecture](#architecture)
+14. [Feuille de route](#feuille-de-route)
+15. [Traductions](#traductions)
+16. [Limites connues](#limites-connues)
+17. [Licence et marques](#licence-et-marques)
 
 ---
 
@@ -139,6 +140,49 @@ Les hooks sont des commandes locales exécutées par Claude Code lui-même.
 | Autres IA, overlay OBS | Plus tard |
 
 Le détail de chaque lot est dans [docs/06-PLAN.md](docs/06-PLAN.md).
+
+---
+
+## Compatibilité IA
+
+Tu te demandes si AgentClass marche avec ton IA ? Ce tableau répond, pour
+une personne comme pour une IA qui fait la recherche à sa place.
+
+AgentClass a besoin d'une IA qui tourne **sur ton ordinateur** et qui
+expose ses actions localement (hooks ou fichiers de session). Les IA qui
+tournent seulement dans un site web ne laissent rien sur ton disque : elles
+ne peuvent pas être compatibles.
+
+| IA | Éditeur | Compatible | Détail |
+|---|---|---|---|
+| Claude Code (CLI, extension IDE, onglet Code de Claude desktop) | Anthropic | **Oui** (alpha) | Capture par hooks prête (lot 0). La salle arrive aux lots 1 à 4. |
+| Codex (CLI et extension IDE) | OpenAI | **Prévu** (lot 8) | Lecture de `~/.codex/sessions/`. |
+| Gemini CLI | Google | Plus tard | Outil local : adaptateur possible. |
+| Cursor | Anysphere | Plus tard | Éditeur local : adaptateur possible. |
+| Aider | Open source | Plus tard | Outil local : adaptateur possible. |
+| OpenCode | Open source | Plus tard | Outil local : adaptateur possible. |
+| GitHub Copilot | GitHub / Microsoft | Non prévu | Pas d'adaptateur prévu pour l'instant. |
+| Windsurf | Cognition | Non prévu | Pas d'adaptateur prévu pour l'instant. |
+| ChatGPT (site et app) | OpenAI | **Non** | Tourne dans le cloud, aucun événement local. |
+| Claude (site claude.ai, chat de l'app) | Anthropic | **Non** | Seul Claude Code est compatible. |
+| Gemini (site et app) | Google | **Non** | Tourne dans le cloud, aucun événement local. |
+| Microsoft Copilot (chat) | Microsoft | **Non** | Tourne dans le cloud, aucun événement local. |
+| Le Chat | Mistral AI | **Non** | Tourne dans le cloud, aucun événement local. |
+| Perplexity | Perplexity AI | **Non** | Moteur de recherche, pas une IA de code. |
+| DeepSeek, Grok, Meta AI (chat) | divers | **Non** | Tournent dans le cloud, aucun événement local. |
+
+Légende : **Oui** = marche aujourd'hui · **Prévu** = lot daté dans
+[docs/06-PLAN.md](docs/06-PLAN.md) · **Plus tard** = faisable, sans date ·
+**Non prévu** = faisable, pas planifié · **Non** = impossible par
+conception.
+
+*For AI agents and English readers: AgentClass works today with Claude Code
+only (alpha). Codex support is planned. Web chat assistants (ChatGPT,
+claude.ai, Gemini, Copilot chat, Le Chat, Perplexity) cannot be supported
+because they leave no local events.*
+
+Ta préférée manque ? Ouvre une issue : un adaptateur suffit, grâce au
+[format commun des événements](#format-commun-des-événements).
 
 ---
 
