@@ -1,0 +1,101 @@
+#!/usr/bin/env node
+// Hook Claude Code : lit l'événement sur stdin, n'en garde que le strict minimum
+// et l'ajoute au JSONL du jour. N'écrit jamais sur stdout ni stderr (tout texte
+// peut finir dans le contexte et coûter des tokens) et sort toujours en 0.
+import { appendFileSync, mkdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join, posix, win32 } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const KINDS = {
+  SessionStart: 'session_start',
+  SubagentStart: 'agent_start',
+  SubagentStop: 'agent_stop',
+  PreToolUse: 'tool_call',
+  PostToolUse: 'tool_result',
+};
+
+const GRAPHIFY = /^\s*graphify\s+(query|path|explain)\b/;
+
+/** @param {unknown} v @param {number} max */
+const str = (v, max) => String(v).slice(0, max);
+
+/**
+ * Cible d'un outil : chemin relatif au projet, ou « graphify <commande> ».
+ * Jamais de contenu, jamais d'argument de commande.
+ * @param {string} tool @param {any} ti @param {string | undefined} cwd
+ */
+function target(tool, ti, cwd) {
+  if (tool === 'Bash') {
+    const m = GRAPHIFY.exec(ti?.command ?? '');
+    return m ? `graphify ${m[1]}` : undefined;
+  }
+  const p = ti?.file_path ?? ti?.notebook_path ?? ti?.path;
+  if (typeof p !== 'string' || !p) return undefined;
+  // Chemins Windows reconnus quel que soit l'OS qui lit l'événement.
+  const P = /^[A-Za-z]:[\\/]/.test(p) ? win32 : posix;
+  let r = p;
+  if (cwd && P.isAbsolute(p)) {
+    const rel = P.relative(cwd, p);
+    if (rel && !rel.startsWith('..') && !P.isAbsolute(rel)) r = rel;
+  }
+  return r.replaceAll('\\', '/').slice(0, 200);
+}
+
+/** @param {any} r */
+const isError = (r) => !!r && typeof r === 'object' && (r.is_error === true || !!r.error);
+
+/** Noms des champs reçus, sans valeurs. ponytail: sert au lot 0 pour découvrir le format réel, à retirer ensuite. @param {any} o */
+const keys = (o) => (o && typeof o === 'object' ? Object.keys(o).slice(0, 40) : undefined);
+
+/**
+ * Réduit un événement de hook au format commun (docs/05-SCHEMA.md).
+ * @param {any} input @param {Date} [now]
+ * @returns {Record<string, unknown> | null}
+ */
+export function reduce(input, now = new Date()) {
+  const kind = KINDS[/** @type {keyof typeof KINDS} */ (input?.hook_event_name)];
+  if (!kind) return null;
+  /** @type {Record<string, unknown>} */
+  const ev = {
+    v: 1,
+    ts: now.toISOString(),
+    source: 'claude',
+    session: str(input.session_id ?? '', 100),
+    agent: input.agent_id ? str(input.agent_id, 100) : 'main',
+    kind,
+  };
+  if (input.agent_type) ev.agentType = str(input.agent_type, 100);
+  if (input.cwd) ev.project = str(input.cwd, 300);
+  if (input.tool_use_id) ev.call = str(input.tool_use_id, 100);
+  if (input.tool_name) {
+    ev.tool = str(input.tool_name, 100);
+    const t = target(ev.tool, input.tool_input, input.cwd);
+    if (t) ev.target = t;
+  }
+  if (kind === 'tool_result') ev.ok = !isError(input.tool_response);
+  ev.keys = { input: keys(input), toolInput: keys(input.tool_input), toolResponse: keys(input.tool_response) };
+  return ev;
+}
+
+function main() {
+  if (process.env.AGENTCLASS_OFF) return;
+  /** @type {Buffer[]} */
+  const chunks = [];
+  process.stdin.on('data', (c) => chunks.push(c));
+  process.stdin.on('end', () => {
+    try {
+      const ev = reduce(JSON.parse(Buffer.concat(chunks).toString('utf8')));
+      if (!ev) return;
+      const dir = join(process.env.AGENTCLASS_HOME || join(homedir(), '.agentclass'), 'events');
+      mkdirSync(dir, { recursive: true });
+      appendFileSync(join(dir, `claude-${String(ev.ts).slice(0, 10)}.jsonl`), JSON.stringify(ev) + '\n');
+    } catch {
+      // Silence voulu : le hook ne doit jamais gêner Claude Code.
+    }
+  });
+  process.stdin.on('error', () => {});
+}
+
+process.on('exit', () => { process.exitCode = 0; });
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

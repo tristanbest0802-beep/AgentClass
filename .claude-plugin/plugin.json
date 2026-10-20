@@ -1,0 +1,6 @@
+{
+  "name": "agentclass",
+  "version": "0.0.0",
+  "description": "Vois en direct ce que font tes agents IA, sans consommer un seul token.",
+  "license": "MIT"
+}
