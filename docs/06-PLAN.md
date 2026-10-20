@@ -1,5 +1,5 @@
 # Plan d'implémentation : AgentClass
-Date : 2026-10-20 · Statut : brouillon
+Date : 2026-10-20 · Statut : lot 0 fait
 
 Chaque lot laisse le projet dans un état qui marche. Une relecture par lot.
 

@@ -55,6 +55,12 @@ test('erreur d\'outil détectée', () => {
   assert.equal(ev.ok, false);
 });
 
+test('PostToolUseFailure : échec, durée gardée', () => {
+  const ev = reduce({ hook_event_name: 'PostToolUseFailure', session_id: 's', tool_name: 'Read', tool_use_id: 't', duration_ms: 12.4, error: 'ERR_SECRET' }, now);
+  assert.deepEqual([ev.kind, ev.ok, ev.ms, ev.call], ['tool_result', false, 12, 't']);
+  assert.ok(!JSON.stringify(ev).includes('ERR_SECRET'));
+});
+
 test('sous-agent : identifiant et type gardés', () => {
   const ev = reduce({ hook_event_name: 'SubagentStart', session_id: 's', agent_id: 'a1', agent_type: 'Explore' }, now);
   assert.deepEqual([ev.kind, ev.agent, ev.agentType], ['agent_start', 'a1', 'Explore']);

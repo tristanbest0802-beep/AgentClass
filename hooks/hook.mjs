@@ -13,6 +13,7 @@ const KINDS = {
   SubagentStop: 'agent_stop',
   PreToolUse: 'tool_call',
   PostToolUse: 'tool_result',
+  PostToolUseFailure: 'tool_result',
 };
 
 const GRAPHIFY = /^\s*graphify\s+(query|path|explain)\b/;
@@ -45,9 +46,6 @@ function target(tool, ti, cwd) {
 /** @param {any} r */
 const isError = (r) => !!r && typeof r === 'object' && (r.is_error === true || !!r.error);
 
-/** Noms des champs reçus, sans valeurs. ponytail: sert au lot 0 pour découvrir le format réel, à retirer ensuite. @param {any} o */
-const keys = (o) => (o && typeof o === 'object' ? Object.keys(o).slice(0, 40) : undefined);
-
 /**
  * Réduit un événement de hook au format commun (docs/05-SCHEMA.md).
  * @param {any} input @param {Date} [now]
@@ -73,8 +71,11 @@ export function reduce(input, now = new Date()) {
     const t = target(ev.tool, input.tool_input, input.cwd);
     if (t) ev.target = t;
   }
-  if (kind === 'tool_result') ev.ok = !isError(input.tool_response);
-  ev.keys = { input: keys(input), toolInput: keys(input.tool_input), toolResponse: keys(input.tool_response) };
+  if (kind === 'tool_result') {
+    // Un outil en échec n'émet pas PostToolUse mais PostToolUseFailure.
+    ev.ok = input.hook_event_name === 'PostToolUse' && !isError(input.tool_response);
+    if (Number.isFinite(input.duration_ms)) ev.ms = Math.round(input.duration_ms);
+  }
   return ev;
 }
 

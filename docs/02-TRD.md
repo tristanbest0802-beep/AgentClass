@@ -107,8 +107,14 @@ AgentClass/
 
 ## Rapport du lot 0
 - Latence du hook sous Windows 11, Node 24 (`npm run bench:hook`, 50 appels) : médiane 55 ms, p90 59 ms. Soit environ 110 ms par outil (PreToolUse et PostToolUse). Jugé acceptable : pas de plan B pour l'instant.
-- Champs réels des hooks : en attente d'une vraie session. Le hook enregistre le nom des champs reçus (`keys`) pour les découvrir.
-- Décision sur l'appariement de l'aller et du retour : en attente de la capture.
+- Capture réelle (session avec 2 sous-agents Explore en parallèle, extrait anonymisé dans `test/fixtures/claude-two-subagents.jsonl`) :
+  - Tous les événements : `session_id`, `cwd`, `transcript_path`, `prompt_id`, `hook_event_name`.
+  - Dans un sous-agent, chaque appel d'outil porte `agent_id` et `agent_type`. Deux sous-agents en parallèle se distinguent sans ambiguïté.
+  - `tool_use_id` présent sur PreToolUse et PostToolUse ; `duration_ms` sur PostToolUse.
+  - Un outil en échec n'émet pas PostToolUse mais `PostToolUseFailure` : hook ajouté, sinon l'aller resterait sans retour.
+  - L'appel `Agent` du principal n'est pas relié par un identifiant au `SubagentStart` qui suit : liaison par ordre et par heure si besoin.
+- Décision : appariement par `tool_use_id` (champ `call`). Expiration des allers sans retour gardée par sécurité (outil interrompu).
+- Le champ temporaire `keys` est retiré du hook.
 
 ## Questions ouvertes
 - Port par défaut.

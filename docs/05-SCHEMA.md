@@ -27,7 +27,7 @@ Pourquoi : local, sans base, facile à purger et à inspecter.
 | project | string | facultatif | Dossier de travail (`cwd`) |
 | ok | boolean | sur `tool_result` | Succès ou échec |
 | agentType | string | facultatif | Type du sous-agent (`Explore`…), s'il est fourni |
-| keys | object | temporaire, lot 0 | Noms des champs reçus par le hook, sans valeurs, pour découvrir le format réel |
+| ms | number | facultatif, sur `tool_result` | Durée de l'outil (`duration_ms`) |
 
 Jamais stockés : le texte des prompts, le contenu des fichiers, la sortie des outils, les arguments complets de `Bash`. Pour `Bash`, seul le motif `graphify query` est reconnu ; sa question n'est pas stockée.
 
@@ -93,6 +93,5 @@ Le champ `v` versionne le format. Un lecteur ignore les lignes d'une version inc
 Aucune sauvegarde. Le JSONL est lisible tel quel.
 
 ## Questions ouvertes
-- Champs réellement fournis par les hooks Claude Code (`tool_use_id`, identifiant du sous-agent, `cwd`) : vérifier au lot 0. Le schéma s'ajustera.
 - Structure exacte des JSONL de Codex : à vérifier au lot 8.
 - Clé de correspondance entre un nœud Graphify et un fichier : à vérifier sur un vrai `graph.json` au lot 3.
