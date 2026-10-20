@@ -163,7 +163,7 @@ Pas encore disponible.
 ### Option B : depuis les sources (alpha)
 
 ```bash
-git clone https://github.com/<ton-compte>/AgentClass.git
+git clone https://github.com/tristanbest0802-beep/AgentClass.git
 cd AgentClass
 npm test
 ```
